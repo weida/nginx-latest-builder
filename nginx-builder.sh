@@ -20,6 +20,7 @@ detect_package_manager() {
     echo ""
   fi
 }
+
 install_dependencies() {
   pkg_manager=$(detect_package_manager)
 
@@ -244,6 +245,10 @@ $NGINX_CONFIGURE \
   --with-http_stub_status_module \
   --with-http_realip_module \
   --with-http_sub_module \
+  --with-stream \
+  --with-stream_realip_module \
+  --with-stream_ssl_module \
+  --with-stream_ssl_preread_module \
   --with-cc-opt="-O2" \
   --with-ld-opt="-Wl,-rpath,/usr/local/lib"
 
