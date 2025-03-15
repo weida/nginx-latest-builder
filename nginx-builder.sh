@@ -32,7 +32,8 @@ install_dependencies() {
     }
   elif [ "$pkg_manager" = "apt" ]; then
     echo "=== Detected apt-based system ==="
-    apt update && apt install -y build-essential wget tar libtool libipc-cmd-perl || {
+    # Note: only test in Ubuntu 24.04.2 LTS
+    apt update && apt install -y build-essential wget tar libtool  || {
       echo "!!! Failed to install essential packages with apt."
       exit 1
     }
