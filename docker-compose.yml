@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: weida/nginx-latest:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3 QUIC
+    volumes:
+      - ./conf/nginx.conf:/usr/local/nginx/conf/nginx.conf:ro
+      - ./conf/conf.d:/usr/local/nginx/conf/conf.d:ro
+      - ./html:/usr/local/nginx/html:ro
+      - ./ssl:/usr/local/nginx/ssl:ro
+      - nginx-logs:/usr/local/nginx/logs
+    restart: unless-stopped
+    networks:
+      - nginx-network
+
+volumes:
+  nginx-logs:
+
+networks:
+  nginx-network:
+    driver: bridge

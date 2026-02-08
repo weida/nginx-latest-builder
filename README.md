@@ -1,18 +1,45 @@
 # Build New Nginx with Latest Dependencies
 
-This script automates the process of downloading and compiling the latest versions of **PCRE2**, **zlib**, **OpenSSL**, and **Nginx**. It retrieves the latest releases from GitHub, compiles them statically, and installs a fully functional version of Nginx with **TLS 1.3** support.
+This script automates the process of downloading and compiling the latest versions of **PCRE2**, **zlib**, **OpenSSL**, **liboqs**, and **Nginx**. It retrieves the latest releases from GitHub, compiles them statically, and installs a fully functional version of Nginx with **HTTP/3**, **TLS 1.3**, and **Post-Quantum Cryptography** support.
 
 ---
 
 ## Features
 
-- Automatically fetches the latest stable tags from GitHub for:
+- ✅ **HTTP/2** support
+- ✅ **HTTP/3 (QUIC)** support
+- ✅ **TLS 1.3** with modern cipher suites
+- ✅ **Post-Quantum Cryptography** via liboqs
+- ✅ Automatically fetches the latest mainline versions from GitHub for:
   - PCRE2
   - zlib
   - OpenSSL
+  - liboqs (Open Quantum Safe)
   - Nginx
-- Downloads, extracts, compiles, and installs the source files.
-- Compatible with multiple Linux distributions and package managers (`yum`, `apt`).
+- ✅ Multi-architecture Docker images (x86_64, ARM64)
+- ✅ Automated CI/CD builds and releases
+
+---
+
+## Quick Start
+
+### Option 1: Docker (Recommended)
+
+```bash
+docker run -d \
+  -p 80:80 \
+  -p 443:443 \
+  -p 443:443/udp \
+  weida/nginx-latest:latest
+```
+
+See [README-Docker.md](README-Docker.md) for detailed Docker usage.
+
+### Option 2: Build from Source
+
+```bash
+bash <(curl -L https://raw.githubusercontent.com/weida/nginx-latest-builder/refs/heads/main/nginx-builder.sh)
+```
 
 ---
 
