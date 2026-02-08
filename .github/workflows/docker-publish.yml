@@ -57,6 +57,10 @@ jobs:
         CONTAINER_AMD64=$(docker create --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest)
         docker cp $CONTAINER_AMD64:/usr/local/nginx ./nginx-amd64
         
+        # Remove Docker-specific symlinks and create real log files
+        rm -f nginx-amd64/logs/access.log nginx-amd64/logs/error.log
+        touch nginx-amd64/logs/access.log nginx-amd64/logs/error.log
+        
         # Add installation scripts
         cp -r install-scripts/* nginx-amd64/
         chmod +x nginx-amd64/*.sh
@@ -70,6 +74,10 @@ jobs:
         docker pull --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
         CONTAINER_ARM64=$(docker create --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest)
         docker cp $CONTAINER_ARM64:/usr/local/nginx ./nginx-arm64
+        
+        # Remove Docker-specific symlinks and create real log files
+        rm -f nginx-arm64/logs/access.log nginx-arm64/logs/error.log
+        touch nginx-arm64/logs/access.log nginx-arm64/logs/error.log
         
         # Add installation scripts
         cp -r install-scripts/* nginx-arm64/
