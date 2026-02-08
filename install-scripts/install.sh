@@ -1,30 +1,27 @@
 #!/bin/bash
 #
-# Nginx Installation Script
-# Supports both system-wide and user-local installation
+# Nginx Installation Script with Service Control
 #
 
 set -e
 
-# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Default values
 INSTALL_PREFIX="/usr/local/nginx"
 INSTALL_TYPE="system"
 CREATE_SERVICE=true
+START_SERVICE=false
+ENABLE_SERVICE=false
 
-# Print colored message
 print_msg() {
     local color=$1
     shift
     echo -e "${color}$@${NC}"
 }
 
-# Show usage
 usage() {
     cat << EOF
 Nginx Installation Script
@@ -35,85 +32,60 @@ Options:
     --prefix PATH       Installation directory (default: /usr/local/nginx)
     --user              Install for current user only (no root required)
     --no-service        Don't create systemd service
+    --start             Start nginx service after installation
+    --enable            Enable nginx service to start on boot
     -h, --help          Show this help message
 
 Examples:
-    # System-wide installation (requires root)
+    # Install only
     sudo $0
 
-    # User installation (no root required)
-    $0 --user
+    # Install and start
+    sudo $0 --start
 
-    # Custom location
-    sudo $0 --prefix /opt/nginx
+    # Install, start, and enable auto-start
+    sudo $0 --start --enable
+
+    # User installation
+    $0 --user --start
 
 EOF
     exit 0
 }
 
-# Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --prefix)
-            INSTALL_PREFIX="$2"
-            shift 2
-            ;;
-        --user)
-            INSTALL_TYPE="user"
-            INSTALL_PREFIX="$HOME/.local/nginx"
-            CREATE_SERVICE=false
-            shift
-            ;;
-        --no-service)
-            CREATE_SERVICE=false
-            shift
-            ;;
-        -h|--help)
-            usage
-            ;;
-        *)
-            print_msg "$RED" "Unknown option: $1"
-            usage
-            ;;
+        --prefix) INSTALL_PREFIX="$2"; shift 2 ;;
+        --user) INSTALL_TYPE="user"; INSTALL_PREFIX="$HOME/.local/nginx"; CREATE_SERVICE=false; shift ;;
+        --no-service) CREATE_SERVICE=false; shift ;;
+        --start) START_SERVICE=true; shift ;;
+        --enable) ENABLE_SERVICE=true; shift ;;
+        -h|--help) usage ;;
+        *) print_msg "$RED" "Unknown option: $1"; usage ;;
     esac
 done
 
-# Check if running as root for system installation
 if [ "$INSTALL_TYPE" = "system" ] && [ "$EUID" -ne 0 ]; then
-    print_msg "$RED" "Error: System installation requires root privileges"
-    print_msg "$YELLOW" "Run with: sudo $0"
-    print_msg "$YELLOW" "Or use: $0 --user (for user installation)"
+    print_msg "$RED" "Error: System installation requires root"
+    print_msg "$YELLOW" "Run: sudo $0 or use: $0 --user"
     exit 1
 fi
 
 print_msg "$GREEN" "=== Nginx Installation ==="
-print_msg "$YELLOW" "Installation type: $INSTALL_TYPE"
-print_msg "$YELLOW" "Installation path: $INSTALL_PREFIX"
+print_msg "$YELLOW" "Type: $INSTALL_TYPE | Path: $INSTALL_PREFIX"
 
-# Create installation directory
 mkdir -p "$INSTALL_PREFIX"
-
-# Copy nginx files
-print_msg "$GREEN" "Copying nginx files..."
 cp -r sbin conf html logs "$INSTALL_PREFIX/"
 
-# Create nginx user for system installation
 if [ "$INSTALL_TYPE" = "system" ]; then
     if ! id nginx &>/dev/null; then
-        print_msg "$GREEN" "Creating nginx user..."
         useradd -r -s /sbin/nologin nginx
     fi
-fi
-
-# Set permissions
-if [ "$INSTALL_TYPE" = "system" ]; then
     chown -R nginx:nginx "$INSTALL_PREFIX"
-    chmod 755 "$INSTALL_PREFIX/sbin/nginx"
-else
-    chmod 755 "$INSTALL_PREFIX/sbin/nginx"
 fi
 
-# Create systemd service
+chmod 755 "$INSTALL_PREFIX/sbin/nginx"
+
 if [ "$CREATE_SERVICE" = true ]; then
     print_msg "$GREEN" "Creating systemd service..."
     cat > /etc/systemd/system/nginx.service << EOF
@@ -136,83 +108,75 @@ WantedBy=multi-user.target
 EOF
 
     systemctl daemon-reload
-    print_msg "$GREEN" "✓ Systemd service created"
+    print_msg "$GREEN" "✓ Service created"
+    
+    if [ "$ENABLE_SERVICE" = true ]; then
+        systemctl enable nginx
+        print_msg "$GREEN" "✓ Service enabled (auto-start on boot)"
+    fi
+    
+    if [ "$START_SERVICE" = true ]; then
+        systemctl start nginx
+        sleep 1
+        if systemctl is-active --quiet nginx; then
+            print_msg "$GREEN" "✓ Nginx started successfully"
+        else
+            print_msg "$RED" "✗ Failed to start"
+        fi
+    fi
 fi
 
-# Add to PATH for user installation
 if [ "$INSTALL_TYPE" = "user" ]; then
     SHELL_RC="$HOME/.bashrc"
-    if [ -f "$HOME/.zshrc" ]; then
-        SHELL_RC="$HOME/.zshrc"
-    fi
+    [ -f "$HOME/.zshrc" ] && SHELL_RC="$HOME/.zshrc"
     
     if ! grep -q "$INSTALL_PREFIX/sbin" "$SHELL_RC"; then
         echo "export PATH=\"$INSTALL_PREFIX/sbin:\$PATH\"" >> "$SHELL_RC"
-        print_msg "$GREEN" "✓ Added to PATH in $SHELL_RC"
+        print_msg "$GREEN" "✓ Added to PATH"
+    fi
+    
+    if [ "$START_SERVICE" = true ]; then
+        "$INSTALL_PREFIX/sbin/nginx"
+        sleep 1
+        if pgrep -f "$INSTALL_PREFIX/sbin/nginx" > /dev/null; then
+            print_msg "$GREEN" "✓ Nginx started"
+        fi
     fi
 fi
 
-# Create symlink for system installation
 if [ "$INSTALL_TYPE" = "system" ] && [ "$INSTALL_PREFIX" != "/usr/local/nginx" ]; then
     ln -sf "$INSTALL_PREFIX/sbin/nginx" /usr/local/bin/nginx
-    print_msg "$GREEN" "✓ Created symlink in /usr/local/bin"
 fi
 
-print_msg "$GREEN" "=== Installation Complete ==="
-print_msg "$YELLOW" "Nginx installed to: $INSTALL_PREFIX"
+print_msg "$GREEN" "\n=== Installation Complete ==="
 
-# Show next steps
 if [ "$INSTALL_TYPE" = "system" ]; then
     cat << EOF
 
-Next steps:
-  1. Start nginx:
-     sudo systemctl start nginx
+Service Control:
+  sudo systemctl start nginx    # Start
+  sudo systemctl stop nginx     # Stop
+  sudo systemctl restart nginx  # Restart
+  sudo systemctl reload nginx   # Reload config
+  sudo systemctl enable nginx   # Enable auto-start
+  sudo systemctl status nginx   # Check status
 
-  2. Enable auto-start:
-     sudo systemctl enable nginx
-
-  3. Check status:
-     sudo systemctl status nginx
-
-  4. View logs:
-     sudo journalctl -u nginx -f
-
-Configuration:
-  - Main config: $INSTALL_PREFIX/conf/nginx.conf
-  - Site configs: $INSTALL_PREFIX/conf/conf.d/
-  - Web root: $INSTALL_PREFIX/html/
-
-Commands:
-  - Test config: sudo nginx -t
-  - Reload: sudo systemctl reload nginx
-  - Stop: sudo systemctl stop nginx
+Config: $INSTALL_PREFIX/conf/nginx.conf
 EOF
+    [ "$START_SERVICE" = false ] && print_msg "$YELLOW" "\nStart now: sudo systemctl start nginx"
+    [ "$ENABLE_SERVICE" = false ] && print_msg "$YELLOW" "Enable auto-start: sudo systemctl enable nginx"
 else
     cat << EOF
 
-Next steps:
-  1. Reload shell:
-     source ~/.bashrc  # or source ~/.zshrc
-
-  2. Start nginx:
-     nginx
-
-  3. Stop nginx:
-     nginx -s quit
-
-Configuration:
-  - Main config: $INSTALL_PREFIX/conf/nginx.conf
-  - Web root: $INSTALL_PREFIX/html/
-
 Commands:
-  - Test config: nginx -t
-  - Reload: nginx -s reload
-  - Stop: nginx -s quit
+  nginx           # Start
+  nginx -s quit   # Stop
+  nginx -s reload # Reload
+  nginx -t        # Test config
 
-Note: Nginx will run on port 8080 by default for user installation.
-Edit $INSTALL_PREFIX/conf/nginx.conf to change the port.
+Config: $INSTALL_PREFIX/conf/nginx.conf
 EOF
+    [ "$START_SERVICE" = false ] && print_msg "$YELLOW" "\nStart now: source ~/.bashrc && nginx"
 fi
 
-print_msg "$GREEN" "Installation successful!"
+print_msg "$GREEN" "\n✓ Done!"
