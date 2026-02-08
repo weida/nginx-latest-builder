@@ -94,14 +94,13 @@ Description=Nginx HTTP Server
 After=network.target
 
 [Service]
-Type=forking
-PIDFile=$INSTALL_PREFIX/logs/nginx.pid
-ExecStartPre=$INSTALL_PREFIX/sbin/nginx -t
-ExecStart=$INSTALL_PREFIX/sbin/nginx
-ExecReload=$INSTALL_PREFIX/sbin/nginx -s reload
-ExecStop=$INSTALL_PREFIX/sbin/nginx -s quit
-PrivateTmp=true
+Type=simple
+ExecStartPre=$INSTALL_PREFIX/sbin/nginx -t -q
+ExecStart=$INSTALL_PREFIX/sbin/nginx -g 'daemon off;'
+ExecReload=/bin/kill -s HUP \$MAINPID
+ExecStop=/bin/kill -s QUIT \$MAINPID
 Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
