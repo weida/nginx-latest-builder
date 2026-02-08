@@ -22,6 +22,12 @@ detect_package_manager() {
 }
 
 install_dependencies() {
+  # Skip if running in Docker (dependencies already installed)
+  if [ -f /.dockerenv ]; then
+    echo "=== Running in Docker, skipping dependency installation ==="
+    return 0
+  fi
+
   pkg_manager=$(detect_package_manager)
 
   if [ "$pkg_manager" = "yum" ]; then
