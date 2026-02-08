@@ -52,19 +52,21 @@ jobs:
     
     - name: Extract binaries from Docker image
       run: |
-        # Pull the built image
-        docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
-        
-        # Create container and extract nginx binary
-        CONTAINER_ID=$(docker create ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest)
-        
-        # Extract for amd64
-        docker cp $CONTAINER_ID:/usr/local/nginx ./nginx-amd64
+        # Extract amd64 binary
+        docker pull --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
+        CONTAINER_AMD64=$(docker create --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest)
+        docker cp $CONTAINER_AMD64:/usr/local/nginx ./nginx-amd64
         tar czf nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz -C nginx-amd64 .
-        
-        # Cleanup
-        docker rm $CONTAINER_ID
+        docker rm $CONTAINER_AMD64
         rm -rf nginx-amd64
+        
+        # Extract arm64 binary
+        docker pull --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
+        CONTAINER_ARM64=$(docker create --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest)
+        docker cp $CONTAINER_ARM64:/usr/local/nginx ./nginx-arm64
+        tar czf nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz -C nginx-arm64 .
+        docker rm $CONTAINER_ARM64
+        rm -rf nginx-arm64
     
     - name: Create GitHub Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -93,18 +95,29 @@ jobs:
           
           ### Binary Installation
           Download the tarball for your architecture, extract and run:
+          
+          **AMD64 (x86_64)**:
           ```bash
           tar xzf nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz
           cd sbin
           ./nginx
           ```
           
+          **ARM64 (aarch64)**:
+          ```bash
+          tar xzf nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz
+          cd sbin
+          ./nginx
+          ```
+          
           ### Build Information
           - Nginx: ${{ steps.version.outputs.nginx_version }}
+          - Architectures: amd64, arm64
           - Built: ${{ github.event.head_commit.timestamp }}
           - Commit: ${{ github.sha }}
         files: |
           nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz
+          nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz
         draft: false
         prerelease: false
       env:
