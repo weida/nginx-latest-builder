@@ -5,16 +5,19 @@ LABEL description="Nginx with HTTP/3 (QUIC) and Post-Quantum Cryptography suppor
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies
+# Install all build dependencies
 RUN apt-get update && \
     apt-get install -y \
-    build-essential \
+    gcc \
+    g++ \
+    make \
     wget \
     tar \
     libtool \
     cmake \
     curl \
-    ca-certificates && \
+    ca-certificates \
+    perl && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy and run build script
