@@ -1,152 +1,166 @@
 # Nginx Docker Usage Guide
 
-## Features
+Complete beginner-friendly guide with ready-to-use examples.
 
-- ✅ HTTP/2 support
-- ✅ HTTP/3 (QUIC) support
-- ✅ TLS 1.3
-- ✅ Post-Quantum Cryptography
-- ✅ Multi-architecture support (x86_64, ARM64)
+## 🚀 Quick Start (Choose One)
 
-## Quick Start
-
-### Using Docker
-
+### Option 1: Instant Start (No Configuration)
 ```bash
-docker run -d \
-  -p 80:80 \
-  -p 443:443 \
-  -p 443:443/udp \
-  caoweida2004/nginx-latest:latest
+docker run -d -p 80:80 caoweida2004/nginx-latest:latest
+```
+Visit: http://localhost
+
+### Option 2: With Your Website (3 Steps)
+```bash
+# 1. Create folder and add your website
+mkdir my-website && cd my-website
+mkdir html
+echo "<h1>Hello World</h1>" > html/index.html
+
+# 2. Download docker-compose.yml
+curl -O https://raw.githubusercontent.com/weida/nginx-latest-builder/main/examples/basic/docker-compose.yml
+
+# 3. Start
+docker-compose up -d
+```
+Visit: http://localhost
+
+## 📦 Ready-to-Use Examples
+
+Download complete working examples from `examples/` folder:
+
+### 1. Basic HTTP Server (`examples/basic/`)
+Simplest setup - just add HTML files
+```bash
+cd examples/basic
+docker-compose up -d
 ```
 
-### Using Docker Compose
-
-1. Create directory structure:
+### 2. HTTPS Server (`examples/https/`)
+HTTPS + HTTP/3 with auto-generated certificate
 ```bash
-mkdir -p conf/conf.d html ssl
+cd examples/https
+./generate-cert.sh
+docker-compose up -d
 ```
 
-2. Copy configuration files to corresponding directories
+## 📖 Complete Beginner Tutorial
 
-3. Start container:
+### Step 1: Install Docker
+- **Windows/Mac**: Download [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- **Linux**: `curl -fsSL https://get.docker.com | sh`
+
+### Step 2: Create Your Project
+```bash
+mkdir my-nginx
+cd my-nginx
+```
+
+### Step 3: Create docker-compose.yml
+```yaml
+version: '3.8'
+services:
+  nginx:
+    image: caoweida2004/nginx-latest:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/local/nginx/html:ro
+    restart: unless-stopped
+```
+
+### Step 4: Add Your Website
+```bash
+mkdir html
+echo "<h1>My Website</h1>" > html/index.html
+```
+
+### Step 5: Start Nginx
 ```bash
 docker-compose up -d
 ```
 
-## Configuration Files
+### Step 6: View Your Site
+Open browser: http://localhost
 
-- `conf/nginx.conf` - Main configuration file
-- `conf/conf.d/*.conf` - Site configuration files
-- `html/` - Static files directory
-- `ssl/` - SSL certificates directory
-
-## Common Commands
+## 🛠️ Common Commands
 
 ```bash
-# Start
+# Start nginx
 docker-compose up -d
 
-# Stop
+# Stop nginx
 docker-compose down
 
-# Restart
+# Restart nginx
 docker-compose restart
 
-# Reload configuration (without restart)
-docker-compose exec nginx /usr/local/nginx/sbin/nginx -s reload
-
 # View logs
-docker-compose logs -f nginx
+docker-compose logs -f
 
-# Test configuration
-docker-compose exec nginx /usr/local/nginx/sbin/nginx -t
-
-# Check version
-docker-compose exec nginx /usr/local/nginx/sbin/nginx -V
+# Update to latest version
+docker-compose pull && docker-compose up -d
 ```
 
-## SSL Certificate Configuration
+## 🔧 Customization
 
-Place certificate files in the `ssl/` directory:
-- `ssl/cert.pem` - Certificate file
-- `ssl/key.pem` - Private key file
+### Change Port
+Edit `docker-compose.yml`:
+```yaml
+ports:
+  - "8080:80"  # Use port 8080
+```
 
-Then modify the `server_name` in `conf/conf.d/https-example.conf`.
-
-## HTTP/3 Testing
-
+### Add Multiple Pages
 ```bash
-# Test HTTP/3 with curl
-curl --http3 https://your-domain.com
-
-# Test with browser
-# Chrome: chrome://flags/#enable-quic
-# Firefox: about:config -> network.http.http3.enabled
+html/
+├── index.html
+├── about.html
+└── contact.html
 ```
 
-## Custom Configuration
+## ❓ Troubleshooting
 
-### Mount custom configuration
-
+### "Port already in use"
 ```bash
-docker run -d \
-  -v /path/to/nginx.conf:/usr/local/nginx/conf/nginx.conf:ro \
-  -v /path/to/conf.d:/usr/local/nginx/conf/conf.d:ro \
-  -v /path/to/html:/usr/local/nginx/html:ro \
-  -v /path/to/ssl:/usr/local/nginx/ssl:ro \
-  -p 80:80 -p 443:443 -p 443:443/udp \
-  caoweida2004/nginx-latest:latest
+# Use different port
+docker run -d -p 8080:80 caoweida2004/nginx-latest:latest
 ```
 
-## Directory Structure
-
-```
-.
-├── conf/
-│   ├── nginx.conf              # Main configuration
-│   └── conf.d/
-│       ├── default.conf        # Default site
-│       └── https-example.conf  # HTTPS + HTTP/3 example
-├── html/                       # Static files
-├── ssl/                        # SSL certificates
-└── docker-compose.yml
-```
-
-## Troubleshooting
-
-### View error logs
+### "Permission denied"
 ```bash
-docker-compose logs nginx
+# Linux: add sudo
+sudo docker-compose up -d
 ```
 
-### Enter container
+### Check if running
 ```bash
-docker-compose exec nginx bash
+docker ps
 ```
 
-### Test configuration file
+### View errors
 ```bash
-docker-compose exec nginx /usr/local/nginx/sbin/nginx -t
+docker logs <container-name>
 ```
 
-## Performance Optimization Tips
+## 📚 More Examples
 
-1. Adjust `worker_processes` based on CPU cores
-2. Tune `worker_connections` according to concurrency needs
-3. Enable HTTP/2 and HTTP/3 for better performance
-4. Configure appropriate caching strategies
-5. Use gzip compression to reduce transfer size
+See `examples/` folder for:
+- HTTPS setup
+- Reverse proxy
+- Load balancing
+- Custom configuration
 
-## Security Recommendations
+## 🔗 Links
 
-1. Regularly update images to get latest security patches
-2. Use strong cipher suites and TLS 1.3
-3. Configure appropriate security headers
-4. Limit request size and rate
-5. Use post-quantum cryptography for future-proof security
+- **Examples**: https://github.com/weida/nginx-latest-builder/tree/main/examples
+- **GitHub**: https://github.com/weida/nginx-latest-builder
+- **Get Help**: https://github.com/weida/nginx-latest-builder/issues
 
-## Support
+## ✨ Features
 
-- GitHub: https://github.com/weida/nginx-latest-builder
-- Issues: https://github.com/weida/nginx-latest-builder/issues
+- HTTP/2 and HTTP/3 (QUIC)
+- TLS 1.3
+- Latest OpenSSL 3.4+
+- Multi-architecture (amd64, arm64)
+- Auto-updated weekly

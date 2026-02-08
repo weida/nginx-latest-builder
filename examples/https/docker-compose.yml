@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: caoweida2004/nginx-latest:latest
+    container_name: nginx-https
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./nginx.conf:/usr/local/nginx/conf/nginx.conf:ro
+      - ./html:/usr/local/nginx/html:ro
+      - ./ssl:/usr/local/nginx/ssl:ro
+    restart: unless-stopped
