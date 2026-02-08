@@ -126,5 +126,6 @@ jobs:
     - name: Update Docker Hub Description
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
+        sudo apt-get update && sudo apt-get install -y jq
         chmod +x update-dockerhub-description.sh
         DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }} ./update-dockerhub-description.sh
