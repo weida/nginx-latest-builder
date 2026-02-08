@@ -17,7 +17,7 @@ docker run -d \
   -p 80:80 \
   -p 443:443 \
   -p 443:443/udp \
-  weida/nginx-latest:latest
+  caoweida2004/nginx-latest:latest
 ```
 
 ### Using Docker Compose
@@ -96,7 +96,7 @@ docker run -d \
   -v /path/to/html:/usr/local/nginx/html:ro \
   -v /path/to/ssl:/usr/local/nginx/ssl:ro \
   -p 80:80 -p 443:443 -p 443:443/udp \
-  weida/nginx-latest:latest
+  caoweida2004/nginx-latest:latest
 ```
 
 ## Directory Structure

@@ -30,7 +30,7 @@ docker run -d \
   -p 80:80 \
   -p 443:443 \
   -p 443:443/udp \
-  weida/nginx-latest:latest
+  caoweida2004/nginx-latest:latest
 ```
 
 See [README-Docker.md](README-Docker.md) for detailed Docker usage.
