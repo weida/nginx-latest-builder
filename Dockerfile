@@ -17,7 +17,12 @@ RUN apt-get update && \
     cmake \
     curl \
     ca-certificates \
-    perl && \
+    perl \
+    autoconf \
+    automake && \
+    ln -s /usr/bin/gcc /usr/bin/cc && \
+    gcc --version && \
+    cc --version && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy and run build script
