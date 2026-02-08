@@ -1,16 +1,16 @@
-# Nginx Docker 使用指南
+# Nginx Docker Usage Guide
 
-## 特性
+## Features
 
-- ✅ HTTP/2 支持
-- ✅ HTTP/3 (QUIC) 支持
+- ✅ HTTP/2 support
+- ✅ HTTP/3 (QUIC) support
 - ✅ TLS 1.3
-- ✅ 后量子加密算法 (Post-Quantum Cryptography)
-- ✅ 多架构支持 (x86_64, ARM64)
+- ✅ Post-Quantum Cryptography
+- ✅ Multi-architecture support (x86_64, ARM64)
 
-## 快速启动
+## Quick Start
 
-### 使用 Docker
+### Using Docker
 
 ```bash
 docker run -d \
@@ -20,74 +20,74 @@ docker run -d \
   weida/nginx-latest:latest
 ```
 
-### 使用 Docker Compose
+### Using Docker Compose
 
-1. 创建目录结构：
+1. Create directory structure:
 ```bash
 mkdir -p conf/conf.d html ssl
 ```
 
-2. 复制配置文件到对应目录
+2. Copy configuration files to corresponding directories
 
-3. 启动容器：
+3. Start container:
 ```bash
 docker-compose up -d
 ```
 
-## 配置文件说明
+## Configuration Files
 
-- `conf/nginx.conf` - 主配置文件
-- `conf/conf.d/*.conf` - 站点配置文件
-- `html/` - 静态文件目录
-- `ssl/` - SSL 证书目录
+- `conf/nginx.conf` - Main configuration file
+- `conf/conf.d/*.conf` - Site configuration files
+- `html/` - Static files directory
+- `ssl/` - SSL certificates directory
 
-## 常用命令
+## Common Commands
 
 ```bash
-# 启动
+# Start
 docker-compose up -d
 
-# 停止
+# Stop
 docker-compose down
 
-# 重启
+# Restart
 docker-compose restart
 
-# 重载配置（无需重启）
+# Reload configuration (without restart)
 docker-compose exec nginx /usr/local/nginx/sbin/nginx -s reload
 
-# 查看日志
+# View logs
 docker-compose logs -f nginx
 
-# 测试配置
+# Test configuration
 docker-compose exec nginx /usr/local/nginx/sbin/nginx -t
 
-# 查看版本
+# Check version
 docker-compose exec nginx /usr/local/nginx/sbin/nginx -V
 ```
 
-## SSL 证书配置
+## SSL Certificate Configuration
 
-将证书文件放入 `ssl/` 目录：
-- `ssl/cert.pem` - 证书文件
-- `ssl/key.pem` - 私钥文件
+Place certificate files in the `ssl/` directory:
+- `ssl/cert.pem` - Certificate file
+- `ssl/key.pem` - Private key file
 
-然后修改 `conf/conf.d/https-example.conf` 中的 `server_name`。
+Then modify the `server_name` in `conf/conf.d/https-example.conf`.
 
-## HTTP/3 测试
+## HTTP/3 Testing
 
 ```bash
-# 使用 curl 测试 HTTP/3
+# Test HTTP/3 with curl
 curl --http3 https://your-domain.com
 
-# 使用浏览器测试
+# Test with browser
 # Chrome: chrome://flags/#enable-quic
 # Firefox: about:config -> network.http.http3.enabled
 ```
 
-## 自定义配置
+## Custom Configuration
 
-### 挂载自定义配置
+### Mount custom configuration
 
 ```bash
 docker run -d \
@@ -99,54 +99,54 @@ docker run -d \
   weida/nginx-latest:latest
 ```
 
-## 目录结构
+## Directory Structure
 
 ```
 .
 ├── conf/
-│   ├── nginx.conf              # 主配置
+│   ├── nginx.conf              # Main configuration
 │   └── conf.d/
-│       ├── default.conf        # 默认站点
-│       └── https-example.conf  # HTTPS + HTTP/3 示例
-├── html/                       # 静态文件
-├── ssl/                        # SSL 证书
+│       ├── default.conf        # Default site
+│       └── https-example.conf  # HTTPS + HTTP/3 example
+├── html/                       # Static files
+├── ssl/                        # SSL certificates
 └── docker-compose.yml
 ```
 
-## 故障排查
+## Troubleshooting
 
-### 查看错误日志
+### View error logs
 ```bash
 docker-compose logs nginx
 ```
 
-### 进入容器
+### Enter container
 ```bash
 docker-compose exec nginx bash
 ```
 
-### 测试配置文件
+### Test configuration file
 ```bash
 docker-compose exec nginx /usr/local/nginx/sbin/nginx -t
 ```
 
-## 性能优化建议
+## Performance Optimization Tips
 
-1. 根据 CPU 核心数调整 `worker_processes`
-2. 调整 `worker_connections` 根据并发需求
-3. 启用 HTTP/2 和 HTTP/3 以提升性能
-4. 配置适当的缓存策略
-5. 使用 gzip 压缩减少传输大小
+1. Adjust `worker_processes` based on CPU cores
+2. Tune `worker_connections` according to concurrency needs
+3. Enable HTTP/2 and HTTP/3 for better performance
+4. Configure appropriate caching strategies
+5. Use gzip compression to reduce transfer size
 
-## 安全建议
+## Security Recommendations
 
-1. 定期更新镜像获取最新安全补丁
-2. 使用强加密套件和 TLS 1.3
-3. 配置适当的安全头部
-4. 限制请求大小和速率
-5. 使用后量子加密算法应对未来威胁
+1. Regularly update images to get latest security patches
+2. Use strong cipher suites and TLS 1.3
+3. Configure appropriate security headers
+4. Limit request size and rate
+5. Use post-quantum cryptography for future-proof security
 
-## 支持
+## Support
 
 - GitHub: https://github.com/weida/nginx-latest-builder
 - Issues: https://github.com/weida/nginx-latest-builder/issues
