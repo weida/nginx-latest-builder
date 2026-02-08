@@ -56,6 +56,12 @@ jobs:
         docker pull --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
         CONTAINER_AMD64=$(docker create --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest)
         docker cp $CONTAINER_AMD64:/usr/local/nginx ./nginx-amd64
+        
+        # Add installation scripts
+        cp -r install-scripts/* nginx-amd64/
+        chmod +x nginx-amd64/*.sh
+        
+        # Package
         tar czf nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz -C nginx-amd64 .
         docker rm $CONTAINER_AMD64
         rm -rf nginx-amd64
@@ -64,6 +70,12 @@ jobs:
         docker pull --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
         CONTAINER_ARM64=$(docker create --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest)
         docker cp $CONTAINER_ARM64:/usr/local/nginx ./nginx-arm64
+        
+        # Add installation scripts
+        cp -r install-scripts/* nginx-arm64/
+        chmod +x nginx-arm64/*.sh
+        
+        # Package
         tar czf nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz -C nginx-arm64 .
         docker rm $CONTAINER_ARM64
         rm -rf nginx-arm64
@@ -94,27 +106,51 @@ jobs:
           ```
           
           ### Binary Installation
-          Download the tarball for your architecture, extract and run:
+          Download the tarball for your architecture, extract and install:
           
           **AMD64 (x86_64)**:
           ```bash
           tar xzf nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz
-          cd sbin
-          ./nginx
+          cd nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64
+          
+          # System-wide (requires root)
+          sudo ./install.sh
+          sudo systemctl start nginx
+          
+          # Or user installation (no root)
+          ./install.sh --user
+          nginx
           ```
           
           **ARM64 (aarch64)**:
           ```bash
           tar xzf nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz
-          cd sbin
-          ./nginx
+          cd nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64
+          
+          # System-wide (requires root)
+          sudo ./install.sh
+          sudo systemctl start nginx
+          
+          # Or user installation (no root)
+          ./install.sh --user
+          nginx
           ```
+          
+          See `INSTALL.md` in the tarball for detailed instructions.
           
           ### Build Information
           - Nginx: ${{ steps.version.outputs.nginx_version }}
           - Architectures: amd64, arm64
           - Built: ${{ github.event.head_commit.timestamp }}
           - Commit: ${{ github.sha }}
+          
+          ### What's Included
+          - Pre-compiled nginx binary
+          - Installation script (install.sh)
+          - Uninstallation script (uninstall.sh)
+          - Complete documentation (INSTALL.md)
+          - Default configuration files
+          - Systemd service file (auto-created)
         files: |
           nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz
           nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz
