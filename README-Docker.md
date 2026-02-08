@@ -6,7 +6,7 @@ Complete beginner-friendly guide with ready-to-use examples.
 
 ### Option 1: Instant Start (No Configuration)
 ```bash
-docker run -d -p 80:80 caoweida2004/nginx-latest:latest
+docker run -d -p 80:80 caoweida2004/nginx-http3:latest
 ```
 Visit: http://localhost
 
@@ -18,7 +18,7 @@ mkdir html
 echo "<h1>Hello World</h1>" > html/index.html
 
 # 2. Download docker-compose.yml
-curl -O https://raw.githubusercontent.com/weida/nginx-latest-builder/main/examples/basic/docker-compose.yml
+curl -O https://raw.githubusercontent.com/weida/nginx-http3-builder/main/examples/basic/docker-compose.yml
 
 # 3. Start
 docker-compose up -d
@@ -61,7 +61,7 @@ cd my-nginx
 version: '3.8'
 services:
   nginx:
-    image: caoweida2004/nginx-latest:latest
+    image: caoweida2004/nginx-http3:latest
     ports:
       - "80:80"
     volumes:
@@ -124,7 +124,7 @@ html/
 ### "Port already in use"
 ```bash
 # Use different port
-docker run -d -p 8080:80 caoweida2004/nginx-latest:latest
+docker run -d -p 8080:80 caoweida2004/nginx-http3:latest
 ```
 
 ### "Permission denied"
@@ -153,9 +153,9 @@ See `examples/` folder for:
 
 ## 🔗 Links
 
-- **Examples**: https://github.com/weida/nginx-latest-builder/tree/main/examples
-- **GitHub**: https://github.com/weida/nginx-latest-builder
-- **Get Help**: https://github.com/weida/nginx-latest-builder/issues
+- **Examples**: https://github.com/weida/nginx-http3-builder/tree/main/examples
+- **GitHub**: https://github.com/weida/nginx-http3-builder
+- **Get Help**: https://github.com/weida/nginx-http3-builder/issues
 
 ## ✨ Features
 

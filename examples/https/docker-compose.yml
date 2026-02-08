@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   nginx:
-    image: caoweida2004/nginx-latest:latest
+    image: caoweida2004/nginx-http3:latest
     container_name: nginx-https
     ports:
       - "80:80"

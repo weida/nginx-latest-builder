@@ -45,24 +45,24 @@ jobs:
         platforms: linux/amd64,linux/arm64
         push: true
         tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:${{ steps.version.outputs.nginx_version }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:${{ steps.version.outputs.nginx_version }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
     - name: Extract binaries from Docker image
       run: |
         # Extract amd64 binary
-        docker pull --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
-        CONTAINER_AMD64=$(docker create --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest)
+        docker pull --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
+        CONTAINER_AMD64=$(docker create --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest)
         docker cp $CONTAINER_AMD64:/usr/local/nginx ./nginx-amd64
         tar czf nginx-${{ steps.version.outputs.nginx_version }}-linux-amd64.tar.gz -C nginx-amd64 .
         docker rm $CONTAINER_AMD64
         rm -rf nginx-amd64
         
         # Extract arm64 binary
-        docker pull --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
-        CONTAINER_ARM64=$(docker create --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest)
+        docker pull --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
+        CONTAINER_ARM64=$(docker create --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest)
         docker cp $CONTAINER_ARM64:/usr/local/nginx ./nginx-arm64
         tar czf nginx-${{ steps.version.outputs.nginx_version }}-linux-arm64.tar.gz -C nginx-arm64 .
         docker rm $CONTAINER_ARM64
@@ -87,10 +87,10 @@ jobs:
           ### Docker Images
           ```bash
           # Pull latest
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:latest
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest
           
           # Pull specific version
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nginx-latest:${{ steps.version.outputs.nginx_version }}
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:${{ steps.version.outputs.nginx_version }}
           ```
           
           ### Binary Installation
@@ -122,3 +122,9 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Update Docker Hub Description
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        chmod +x update-dockerhub-description.sh
+        DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }} ./update-dockerhub-description.sh

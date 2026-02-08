@@ -30,7 +30,7 @@ docker run -d \
   -p 80:80 \
   -p 443:443 \
   -p 443:443/udp \
-  caoweida2004/nginx-latest:latest
+  caoweida2004/nginx-http3:latest
 ```
 
 See [README-Docker.md](README-Docker.md) for detailed Docker usage.
@@ -38,7 +38,7 @@ See [README-Docker.md](README-Docker.md) for detailed Docker usage.
 ### Option 2: Build from Source
 
 ```bash
-bash <(curl -L https://raw.githubusercontent.com/weida/nginx-latest-builder/refs/heads/main/nginx-builder.sh)
+bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
 ```
 
 ---
@@ -74,7 +74,7 @@ For CentOS, **perl-IPC-Cmd** is also required. These dependencies will be instal
 Run the following command to download and execute the script, building the latest version of Nginx:
 
 ```bash
-bash <(curl -L https://raw.githubusercontent.com/weida/nginx-latest-builder/refs/heads/main/nginx-builder.sh)
+bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
 ```
 
 ### Output Example
