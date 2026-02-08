@@ -172,40 +172,34 @@ download_and_extract() {
 PCRE2_OWNER="PCRE2Project"  ; PCRE2_REPO="pcre2"
 ZLIB_OWNER="madler"         ; ZLIB_REPO="zlib"
 OPENSSL_OWNER="openssl"     ; OPENSSL_REPO="openssl"
-LIBOQS_OWNER="open-quantum-safe" ; LIBOQS_REPO="liboqs"
 NGINX_OWNER="nginx"         ; NGINX_REPO="nginx"
 
 pcre2_raw_tag="$(get_latest_tag_from_github "$PCRE2_OWNER" "$PCRE2_REPO")"
 zlib_raw_tag="$(get_latest_tag_from_github  "$ZLIB_OWNER" "$ZLIB_REPO")"
 openssl_raw_tag="$(get_latest_tag_from_github "$OPENSSL_OWNER" "$OPENSSL_REPO")"
-liboqs_raw_tag="$(get_latest_tag_from_github "$LIBOQS_OWNER" "$LIBOQS_REPO")"
 nginx_raw_tag="$(get_latest_mainline_nginx_tag "$NGINX_OWNER" "$NGINX_REPO")"
 
 # fallback if any empty
 [ -z "$pcre2_raw_tag" ]   && pcre2_raw_tag="10.44"
 [ -z "$zlib_raw_tag" ]    && zlib_raw_tag="1.3.1"
 [ -z "$openssl_raw_tag" ] && openssl_raw_tag="3.4.0"
-[ -z "$liboqs_raw_tag" ]  && liboqs_raw_tag="0.12.0"
 [ -z "$nginx_raw_tag" ]   && nginx_raw_tag="release-1.29.5"
 
 echo "Raw PCRE2 tag:   $pcre2_raw_tag"
 echo "Raw zlib tag:    $zlib_raw_tag"
 echo "Raw OpenSSL tag: $openssl_raw_tag"
-echo "Raw liboqs tag:  $liboqs_raw_tag"
 echo "Raw Nginx tag:   $nginx_raw_tag"
 
 # Clean them
 pcre2_clean_tag="$(clean_tag "$pcre2_raw_tag")"
 zlib_clean_tag="$(clean_tag "$zlib_raw_tag")"
 openssl_clean_tag="$(clean_tag "$openssl_raw_tag")"
-liboqs_clean_tag="$(clean_tag "$liboqs_raw_tag")"
 nginx_clean_tag="$(clean_tag "$nginx_raw_tag")"
 
 
 echo "Clean PCRE2 tag:   $pcre2_clean_tag"
 echo "Clean zlib tag:    $zlib_clean_tag"
 echo "Clean OpenSSL tag: $openssl_clean_tag"
-echo "Clean liboqs tag:  $liboqs_clean_tag"
 echo "Clean Nginx tag:   $nginx_clean_tag"
 
 #-----------------------------------------------------------
@@ -222,13 +216,11 @@ mkdir -p "$SRC_DIR"
 pcre2_dir="$(download_and_extract  "$PCRE2_OWNER"  "$PCRE2_REPO"  "$pcre2_raw_tag"   "$pcre2_clean_tag"   "pcre2"  "$SRC_DIR")"
 zlib_dir="$(download_and_extract   "$ZLIB_OWNER"   "$ZLIB_REPO"   "$zlib_raw_tag"    "$zlib_clean_tag"    "zlib"   "$SRC_DIR")"
 openssl_dir="$(download_and_extract "$OPENSSL_OWNER" "$OPENSSL_REPO" "$openssl_raw_tag" "$openssl_clean_tag" "openssl" "$SRC_DIR")"
-liboqs_dir="$(download_and_extract "$LIBOQS_OWNER" "$LIBOQS_REPO" "$liboqs_raw_tag" "$liboqs_clean_tag" "liboqs" "$SRC_DIR")"
 nginx_dir="$(download_and_extract   "$NGINX_OWNER"  "$NGINX_REPO"  "$nginx_raw_tag"   "$nginx_clean_tag"   "nginx"  "$SRC_DIR")"
 
 echo "pcre2_dir:   $pcre2_dir"
 echo "zlib_dir:    $zlib_dir"
 echo "openssl_dir: $openssl_dir"
-echo "liboqs_dir:  $liboqs_dir"
 echo "nginx_dir:   $nginx_dir"
 
 #-----------------------------------------------------------
@@ -240,24 +232,7 @@ if ! id nginx &>/dev/null; then
 fi
 
 #-----------------------------------------------------------
-# 8) Build liboqs (Post-Quantum Cryptography library)
-#-----------------------------------------------------------
-echo "=== Building liboqs for Post-Quantum Cryptography support ==="
-cd "$SRC_DIR/$liboqs_dir" || {
-  echo "!!! Failed to cd into $SRC_DIR/$liboqs_dir"
-  exit 1
-}
-
-mkdir -p build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DCMAKE_BUILD_TYPE=Release \
-      ..
-make -j"$(nproc)"
-make install
-
-#-----------------------------------------------------------
-# 9) Build Nginx with these libraries (static linking)
+# 8) Build Nginx with these libraries (static linking)
 #-----------------------------------------------------------
 cd "$SRC_DIR/${pcre2_dir}" && (./autogen.sh || ./configure)
 
@@ -277,7 +252,7 @@ else
   exit 1
 fi
 
-echo "=== Configuring Nginx with PCRE2, zlib, OpenSSL (HTTP/3 + Post-Quantum) ==="
+echo "=== Configuring Nginx with PCRE2, zlib, OpenSSL (HTTP/3) ==="
 $NGINX_CONFIGURE \
   --prefix="${NGINX_PREFIX}" \
   --user=nginx \
@@ -285,7 +260,7 @@ $NGINX_CONFIGURE \
   --with-pcre="${SRC_DIR}/${pcre2_dir}" \
   --with-zlib="${SRC_DIR}/${zlib_dir}" \
   --with-openssl="${SRC_DIR}/${openssl_dir}" \
-  --with-openssl-opt="enable-tls1_3 enable-ktls -I/usr/local/include -L/usr/local/lib -loqs" \
+  --with-openssl-opt="enable-tls1_3 enable-ktls" \
   --with-http_ssl_module \
   --with-http_v2_module \
   --with-http_v3_module \
@@ -297,8 +272,8 @@ $NGINX_CONFIGURE \
   --with-stream_realip_module \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
-  --with-cc-opt="-O2 -I/usr/local/include" \
-  --with-ld-opt="-Wl,-rpath,/usr/local/lib -L/usr/local/lib -loqs"
+  --with-cc-opt="-O2" \
+  --with-ld-opt="-Wl,-rpath,/usr/local/lib"
 
 if [ $? -ne 0 ]; then
   echo "!!! Nginx configure failed."
@@ -333,13 +308,11 @@ echo "=== Done. Nginx installed to ${NGINX_PREFIX} ==="
 echo "    PCRE2:   ${pcre2_clean_tag}"
 echo "    zlib:    ${zlib_clean_tag}"
 echo "    OpenSSL: ${openssl_clean_tag}"
-echo "    liboqs:  ${liboqs_clean_tag} (Post-Quantum Cryptography)"
 echo "    Nginx:   ${nginx_clean_tag}"
 echo ""
 echo "Features enabled:"
 echo "  - HTTP/2"
 echo "  - HTTP/3 (QUIC)"
 echo "  - TLS 1.3"
-echo "  - Post-Quantum Cryptography (via liboqs)"
 
 
