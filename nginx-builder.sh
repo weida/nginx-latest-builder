@@ -297,7 +297,6 @@ $NGINX_CONFIGURE \
   --with-stream_realip_module \
   --with-stream_ssl_module \
   --with-stream_ssl_preread_module \
-  --with-stream_quic_module \
   --with-cc-opt="-O2 -I/usr/local/include" \
   --with-ld-opt="-Wl,-rpath,/usr/local/lib -L/usr/local/lib -loqs"
 
