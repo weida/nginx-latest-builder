@@ -6,7 +6,7 @@ LABEL maintainer="weida <caoweida2004@gmail.com>"
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_OWNER=freenginx
 ENV NGINX_REPO=nginx
-ENV OPENSSL_EXTRA_OPTS="-std=c99 no-asm -D_POSIX_C_SOURCE=199309L"
+ENV OPENSSL_EXTRA_OPTS="-std=c99 no-asm -D_GNU_SOURCE"
 
 # Switch to vault.centos.org (CentOS 7 is EOL)
 RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*.repo && \
