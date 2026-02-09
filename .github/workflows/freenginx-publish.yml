@@ -127,6 +127,27 @@ jobs:
         docker rm $CONTAINER_ARM64
         rm -rf freenginx-arm64
     
+    - name: Upload binaries as artifact
+      if: steps.decide.outputs.skip != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: freenginx-binaries${{ matrix.variant.suffix }}
+        path: freenginx-*.tar.gz
+        retention-days: 7
+    
+    - name: Download all artifacts
+      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+    
+    - name: Prepare release files
+      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      run: |
+        mkdir -p release-files
+        find ./artifacts -name "*.tar.gz" -exec cp {} release-files/ \;
+        ls -lh release-files/
+    
     - name: Create GitHub Release
       if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       uses: softprops/action-gh-release@v1
@@ -193,7 +214,7 @@ jobs:
           - Built: ${{ github.event.head_commit.timestamp }}
           - Commit: ${{ github.sha }}
         files: |
-          freenginx-${{ steps.version.outputs.version }}-linux-*.tar.gz
+          release-files/*.tar.gz
         draft: false
         prerelease: false
       env:
