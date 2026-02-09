@@ -65,22 +65,46 @@ curl -k https://localhost:8443
 curl -k -v https://localhost:8443 2>&1 | grep -i 'cipher\|curve'
 ```
 
+**预期输出**：
+```
+X-SSL-Cipher: TLS_AES_256_GCM_SHA384
+X-SSL-Curve: X25519MLKEM768
+```
+
+如果显示 `X-SSL-Curve: X25519`，说明客户端不支持后量子加密，自动回退到传统算法（这是正常行为）。
+
 ### 3. 验证后量子支持
 
 ```bash
-# 检查 OpenSSL 版本
-/usr/local/nginx/sbin/nginx -V 2>&1 | grep OpenSSL
+# 检查 nginx 是否包含 ML-KEM 代码
+strings /usr/local/nginx/sbin/nginx | grep -i mlkem
 
-# 应该显示：OpenSSL 3.6.1 或更高版本
+# 应该看到：
+# X25519MLKEM768
+# ML-KEM-512
+# ML-KEM-768
+# ML-KEM-1024
 ```
 
 ## 客户端兼容性
 
 ### 支持后量子加密的客户端
-- **Chrome 116+** (2023年8月)
-- **Firefox 119+** (2023年10月)
-- **OpenSSL 3.5+** (2025年4月)
-- **curl 8.5+** (需要 OpenSSL 3.5+)
+- **Chrome 116+** (2023年8月) - 完全支持
+- **Firefox 119+** (2023年10月) - 完全支持
+- **Edge 116+** (2023年8月) - 完全支持
+- **Safari 17.4+** (2024年3月) - 部分支持
+- **OpenSSL 3.5+** (2025年4月) - 完全支持
+- **curl 8.5+** (需要 OpenSSL 3.5+) - 完全支持
+
+### 测试客户端支持
+
+访问配置了后量子加密的网站，检查响应头：
+```bash
+curl -k -v https://your-domain.com 2>&1 | grep "X-SSL-Curve"
+```
+
+- 显示 `X25519MLKEM768` → ✅ 客户端支持后量子加密
+- 显示 `X25519` → ⚠️ 客户端不支持，已回退到传统算法
 
 ### 不支持的客户端
 配置中的回退机制会自动使用传统算法（X25519, P-256）：
@@ -89,6 +113,8 @@ curl -k -v https://localhost:8443 2>&1 | grep -i 'cipher\|curve'
 ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
 #              ^^^^^^^^^^^^^^ 优先  ^^^^^^ 回退
 ```
+
+**重要**：即使客户端不支持后量子加密，连接仍然安全（使用传统 TLS 1.3）。
 
 ## 性能影响
 
@@ -106,9 +132,27 @@ ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
 
 ## 故障排查
 
-### 问题：客户端连接失败
+### 问题：显示 X25519 而不是 X25519MLKEM768
 
 **原因**：客户端不支持后量子算法
+
+**验证**：
+```bash
+# 检查 nginx 是否支持
+strings /usr/local/nginx/sbin/nginx | grep X25519MLKEM768
+
+# 检查客户端版本
+curl --version  # 需要 curl 8.5+ 和 OpenSSL 3.5+
+```
+
+**解决**：
+- ✅ 这是正常的回退行为，不是错误
+- 使用现代浏览器（Chrome 116+, Firefox 119+）测试
+- 或升级 curl 和 OpenSSL
+
+### 问题：客户端连接失败
+
+**原因**：配置错误或缺少回退算法
 
 **解决**：确保配置了回退算法
 ```nginx
@@ -119,9 +163,10 @@ ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
 
 **原因**：OpenSSL 版本过低
 
-**解决**：确认使用 OpenSSL 3.5+
+**解决**：确认使用 OpenSSL 3.6+
 ```bash
 /usr/local/nginx/sbin/nginx -V 2>&1 | grep OpenSSL
+# 应显示：built with OpenSSL 3.6.1 或更高
 ```
 
 ### 问题：无法验证是否使用后量子算法
@@ -131,6 +176,8 @@ ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
 add_header X-SSL-Cipher $ssl_cipher always;
 add_header X-SSL-Curve $ssl_curve always;
 ```
+
+然后访问网站查看响应头。
 
 ## 参考资源
 

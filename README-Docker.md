@@ -184,10 +184,20 @@ See `examples/` folder for:
 
 - HTTP/2 and HTTP/3 (QUIC)
 - TLS 1.3
-- Latest OpenSSL 3.4+
+- **Post-Quantum Cryptography** (ML-KEM via OpenSSL 3.6+)
+- Latest OpenSSL, PCRE2, and zlib
 - Multi-architecture (amd64, arm64)
 - Multiple glibc versions for compatibility
 - Auto-updated weekly
+
+## 🔐 Post-Quantum Cryptography
+
+Built-in support for quantum-resistant encryption:
+- **ML-KEM-768** (FIPS 203) - Quantum-safe key exchange
+- **Hybrid mode** - X25519MLKEM768 (traditional + quantum-safe)
+- Automatic fallback for older clients
+
+See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration.
 
 ## 🔍 Version Selection
 
