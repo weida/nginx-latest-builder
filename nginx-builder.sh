@@ -277,7 +277,7 @@ $NGINX_CONFIGURE \
   --with-pcre="${SRC_DIR}/${pcre2_dir}" \
   --with-zlib="${SRC_DIR}/${zlib_dir}" \
   --with-openssl="${SRC_DIR}/${openssl_dir}" \
-  --with-openssl-opt="enable-tls1_3 -std=c99" \
+  --with-openssl-opt="enable-tls1_3 -std=c99 no-asm" \
   --with-http_ssl_module \
   --with-http_v2_module \
   --with-http_v3_module \
