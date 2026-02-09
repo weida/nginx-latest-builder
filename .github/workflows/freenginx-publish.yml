@@ -28,7 +28,7 @@ jobs:
       matrix:
         variant:
           - { dockerfile: 'Dockerfile.freenginx', suffix: '', glibc: '2.39', base: 'Ubuntu 24.04' }
-          - { dockerfile: 'Dockerfile.freenginx.compat', suffix: '-compat', glibc: '2.31', base: 'Debian 11' }
+          - { dockerfile: 'Dockerfile.freenginx.compat', suffix: '-compat', glibc: '2.17', base: 'CentOS 7' }
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -210,7 +210,7 @@ jobs:
           ### Build Information
           - freenginx: ${{ steps.version.outputs.version }}
           - Architectures: amd64, arm64
-          - glibc versions: 2.39 (standard), 2.31 (compat)
+          - glibc versions: 2.39 (standard), 2.17 (compat)
           - Built: ${{ github.event.head_commit.timestamp }}
           - Commit: ${{ github.sha }}
         files: |
