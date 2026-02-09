@@ -66,16 +66,24 @@ get_latest_tag_from_github() {
 
 #-----------------------------------------------------------
 # 1b) Function: get_latest_mainline_nginx_tag
-#    - For nginx, get the absolute latest mainline version
+#    - For nginx/freenginx, get the absolute latest mainline version
+#    - Try releases first, fallback to tags
 #-----------------------------------------------------------
 get_latest_mainline_nginx_tag() {
   local owner="$1"
   local repo="$2"
   local json tag_name
 
+  # Try releases first
   json="$(curl -s "https://api.github.com/repos/${owner}/${repo}/releases")"
-  # Get the first (latest) release tag
   tag_name="$(echo "$json" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)"
+  
+  # If no releases, try tags
+  if [ -z "$tag_name" ]; then
+    json="$(curl -s "https://api.github.com/repos/${owner}/${repo}/tags")"
+    tag_name="$(echo "$json" | grep -oP '"name":\s*"\K[^"]+' | head -1)"
+  fi
+  
   echo "$tag_name"
 }
 
@@ -184,7 +192,7 @@ nginx_raw_tag="$(get_latest_mainline_nginx_tag "$NGINX_OWNER" "$NGINX_REPO")"
 [ -z "$pcre2_raw_tag" ]   && pcre2_raw_tag="10.44"
 [ -z "$zlib_raw_tag" ]    && zlib_raw_tag="1.3.1"
 [ -z "$openssl_raw_tag" ] && openssl_raw_tag="3.4.0"
-[ -z "$nginx_raw_tag" ]   && nginx_raw_tag="release-1.29.5"
+[ -z "$nginx_raw_tag" ]   && nginx_raw_tag="release-1.27.3"
 
 echo "Raw PCRE2 tag:   $pcre2_raw_tag"
 echo "Raw zlib tag:    $zlib_raw_tag"
