@@ -1,0 +1,38 @@
+FROM debian:11
+
+LABEL maintainer="weida <caoweida2004@gmail.com>"
+LABEL description="Nginx with HTTP/3 - Compatible with older glibc (2.31+)"
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
+    make \
+    wget \
+    tar \
+    libtool \
+    cmake \
+    curl \
+    ca-certificates \
+    perl \
+    autoconf \
+    automake && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc
+
+COPY nginx-builder.sh /tmp/nginx-builder.sh
+RUN bash /tmp/nginx-builder.sh && \
+    rm -rf /usr/local/src/* /tmp/nginx-builder.sh
+
+RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
+    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
+
+EXPOSE 80 443 443/udp
+
+STOPSIGNAL SIGQUIT
+
+CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]

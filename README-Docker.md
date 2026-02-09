@@ -5,9 +5,17 @@ Complete beginner-friendly guide with ready-to-use examples.
 ## 🚀 Quick Start (Choose One)
 
 ### Option 1: Instant Start (No Configuration)
+
+**Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
 ```bash
 docker run -d -p 80:80 caoweida2004/nginx-http3:latest
 ```
+
+**Compatible version** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11):
+```bash
+docker run -d -p 80:80 caoweida2004/nginx-http3:latest-compat
+```
+
 Visit: http://localhost
 
 ### Option 2: With Your Website (3 Steps)
@@ -57,11 +65,26 @@ cd my-nginx
 ```
 
 ### Step 3: Create docker-compose.yml
+
+**For modern systems** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
 ```yaml
 version: '3.8'
 services:
   nginx:
     image: caoweida2004/nginx-http3:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/local/nginx/html:ro
+    restart: unless-stopped
+```
+
+**For older systems** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11):
+```yaml
+version: '3.8'
+services:
+  nginx:
+    image: caoweida2004/nginx-http3:latest-compat
     ports:
       - "80:80"
     volumes:
@@ -163,4 +186,19 @@ See `examples/` folder for:
 - TLS 1.3
 - Latest OpenSSL 3.4+
 - Multi-architecture (amd64, arm64)
+- Multiple glibc versions for compatibility
 - Auto-updated weekly
+
+## 🔍 Version Selection
+
+**Standard (`latest`):**
+- Base: Ubuntu 24.04
+- glibc: 2.39
+- For: Ubuntu 22.04+, Debian 12+, RHEL 9+
+
+**Compatible (`latest-compat`):**
+- Base: Debian 11
+- glibc: 2.31
+- For: CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11
+
+**Not sure which to use?** Try standard first. If you get glibc errors, use compat.
