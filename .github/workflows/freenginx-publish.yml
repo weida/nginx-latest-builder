@@ -219,3 +219,10 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Update Docker Hub Description
+      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      run: |
+        sudo apt-get update && sudo apt-get install -y jq
+        chmod +x update-dockerhub-description-freenginx.sh
+        DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }} ./update-dockerhub-description-freenginx.sh

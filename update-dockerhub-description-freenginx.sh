@@ -1,11 +1,11 @@
 #!/bin/bash
 #
-# Update Docker Hub repository description
-# Usage: ./update-dockerhub-description.sh
+# Update Docker Hub repository description for freenginx
+# Usage: ./update-dockerhub-description-freenginx.sh
 #
 
 DOCKERHUB_USERNAME="${DOCKERHUB_USERNAME:-caoweida2004}"
-DOCKERHUB_REPOSITORY="nginx-http3"
+DOCKERHUB_REPOSITORY="freenginx-http3"
 DOCKERHUB_TOKEN="${DOCKERHUB_TOKEN}"
 
 if [ -z "$DOCKERHUB_TOKEN" ]; then
@@ -15,23 +15,23 @@ if [ -z "$DOCKERHUB_TOKEN" ]; then
 fi
 
 # Short description (100 characters max)
-SHORT_DESC="Nginx with HTTP/3, TLS 1.3, latest OpenSSL. Multi-arch (amd64/arm64). Auto-updated weekly."
+SHORT_DESC="freenginx with HTTP/3, TLS 1.3, latest OpenSSL. Multi-arch (amd64/arm64). Auto-updated weekly."
 
 # Full description
-FULL_DESC="# Nginx with HTTP/3
+FULL_DESC="# freenginx with HTTP/3
 
-High-performance Nginx with HTTP/3 (QUIC), TLS 1.3, and latest dependencies.
+High-performance freenginx with HTTP/3 (QUIC), TLS 1.3, and latest dependencies.
 
 ## Quick Start
 
 **Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
 \`\`\`bash
-docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest
+docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/freenginx-http3:latest
 \`\`\`
 
 **Compatible version** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 18.04+):
 \`\`\`bash
-docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest-compat
+docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/freenginx-http3:latest-compat
 \`\`\`
 
 ## Features
@@ -57,9 +57,10 @@ docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest
 
 ## Links
 - GitHub: https://github.com/weida/nginx-latest-builder
-- Documentation: https://github.com/weida/nginx-latest-builder/blob/main/README-Docker.md"
+- Documentation: https://github.com/weida/nginx-latest-builder/blob/main/README-Docker.md
+- freenginx: https://freenginx.org"
 
-echo "Updating Docker Hub repository description..."
+echo "Updating Docker Hub repository description for freenginx..."
 
 # Escape JSON properly
 SHORT_DESC_JSON=$(echo "$SHORT_DESC" | jq -Rs .)
