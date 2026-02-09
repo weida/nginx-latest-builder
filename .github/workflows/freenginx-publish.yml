@@ -36,7 +36,7 @@ jobs:
     - name: Get freenginx version
       id: version
       run: |
-        VERSION=$(curl -s "https://api.github.com/repos/freenginx/nginx/releases" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)
+        VERSION=$(curl -s "https://api.github.com/repos/freenginx/nginx/tags" | grep -oP '"name":\s*"\K[^"]+' | head -1 | sed 's/release-//')
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "freenginx version: $VERSION (glibc ${{ matrix.variant.glibc }}, ${{ matrix.variant.base }})"
     
