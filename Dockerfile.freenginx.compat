@@ -23,6 +23,7 @@ RUN yum install -y \
     ca-certificates \
     perl \
     perl-IPC-Cmd \
+    perl-Time-Piece \
     autoconf \
     automake && \
     yum clean all
