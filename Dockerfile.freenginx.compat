@@ -25,7 +25,9 @@ RUN yum install -y \
     perl-IPC-Cmd \
     perl-Time-Piece \
     autoconf \
-    automake && \
+    automake \
+    kernel-headers \
+    glibc-devel && \
     yum clean all
 
 COPY nginx-builder.sh /tmp/nginx-builder.sh
