@@ -9,7 +9,7 @@ This script automates the process of downloading and compiling the latest versio
 - ✅ **HTTP/2** support
 - ✅ **HTTP/3 (QUIC)** support
 - ✅ **TLS 1.3** with modern cipher suites
-- ✅ **Post-Quantum Cryptography** via liboqs
+- ✅ **Post-Quantum Cryptography** (ML-KEM, ML-DSA via OpenSSL 3.6+)
 - ✅ Automatically fetches the latest mainline versions from GitHub for:
   - PCRE2
   - zlib
@@ -177,6 +177,24 @@ The script configures Nginx with the following default options:
 ### Customization
 
 You can modify these options in the script to add or remove features according to your requirements. Refer to the [official Nginx documentation](http://nginx.org/en/docs/) for a full list of available configuration options.
+
+---
+
+## Post-Quantum Cryptography Support
+
+This build includes OpenSSL 3.6+ with built-in support for NIST-standardized post-quantum algorithms:
+
+- **ML-KEM** (FIPS 203) - Quantum-resistant key exchange
+- **ML-DSA** (FIPS 204) - Quantum-resistant digital signatures
+- **Hybrid modes** - Combine traditional and post-quantum algorithms
+
+See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration guide.
+
+**Quick example**:
+```nginx
+ssl_protocols TLSv1.3;
+ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
+```
 
 ---
 
