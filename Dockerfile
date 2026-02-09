@@ -29,23 +29,22 @@ RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc
 # Build nginx
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
-    rm -rf /usr/local/src/* /tmp/nginx-builder.sh
+    rm -rf /usr/local/src/* /tmp/nginx-builder.sh && \
+    ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
+    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
 
 # Runtime stage
-FROM ubuntu:24.04
+FROM gcr.io/distroless/base-debian12
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
-LABEL description="Nginx with HTTP/3 (QUIC) support - statically linked"
+LABEL description="Nginx with HTTP/3 (QUIC) support - statically linked - minimal image"
 
 # Copy nginx from builder
 COPY --from=builder /usr/local/nginx /usr/local/nginx
 
-# Create nginx user
-RUN useradd -r -s /sbin/nologin nginx
-
-# Forward logs to docker log collector
-RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
-    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
+# Distroless already has nonroot user, create nginx user via passwd/group files
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
 EXPOSE 80 443 443/udp
 

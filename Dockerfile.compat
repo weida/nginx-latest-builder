@@ -1,15 +1,13 @@
 # Build stage
-FROM debian:11 AS builder
+FROM centos:7 AS builder
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
+RUN yum install -y \
     gcc \
-    g++ \
+    gcc-c++ \
     make \
     wget \
     tar \
@@ -18,28 +16,30 @@ RUN apt-get update && \
     curl \
     ca-certificates \
     perl \
+    perl-IPC-Cmd \
     autoconf \
     automake && \
-    rm -rf /var/lib/apt/lists/*
+    yum clean all
 
 RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc
 
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
-    rm -rf /usr/local/src/* /tmp/nginx-builder.sh
+    rm -rf /usr/local/src/* /tmp/nginx-builder.sh && \
+    ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
+    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
 
 # Runtime stage
-FROM debian:11-slim
+FROM almalinux:8-minimal
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
-LABEL description="Nginx with HTTP/3 - Compatible with older glibc (2.31+) - statically linked"
+LABEL description="Nginx with HTTP/3 - Compatible with CentOS 7+ (glibc 2.17+) - statically linked"
 
 COPY --from=builder /usr/local/nginx /usr/local/nginx
 
-RUN useradd -r -s /sbin/nologin nginx || true
-
-RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
-    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
+RUN microdnf install -y shadow-utils && \
+    useradd -r -s /sbin/nologin nginx && \
+    microdnf clean all
 
 EXPOSE 80 443 443/udp
 
