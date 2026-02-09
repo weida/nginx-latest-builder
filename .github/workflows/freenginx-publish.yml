@@ -1,0 +1,200 @@
+name: Build and Push freenginx Docker Images
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile.freenginx*'
+      - 'nginx-builder.sh'
+      - '.github/workflows/freenginx-publish.yml'
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force rebuild even if version exists'
+        required: false
+        type: boolean
+        default: false
+  schedule:
+    - cron: '0 0 * * 0'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant:
+          - { dockerfile: 'Dockerfile.freenginx', suffix: '', glibc: '2.39', base: 'Ubuntu 24.04' }
+          - { dockerfile: 'Dockerfile.freenginx.compat', suffix: '-compat', glibc: '2.31', base: 'Debian 11' }
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Get freenginx version
+      id: version
+      run: |
+        VERSION=$(curl -s "https://api.github.com/repos/freenginx/nginx/releases" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "freenginx version: $VERSION (glibc ${{ matrix.variant.glibc }}, ${{ matrix.variant.base }})"
+    
+    - name: Check if version exists
+      id: check
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        if gh release view "freenginx-v$VERSION" 2>/dev/null; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Version freenginx-v$VERSION already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Version freenginx-v$VERSION is new"
+        fi
+    
+    - name: Decide build
+      id: decide
+      run: |
+        if [ "${{ steps.check.outputs.exists }}" = "true" ] && [ "${{ inputs.force_build }}" != "true" ]; then
+          echo "skip=true" >> $GITHUB_OUTPUT
+          echo "Skipping build - version exists and force_build is false"
+        else
+          echo "skip=false" >> $GITHUB_OUTPUT
+          echo "Proceeding with build"
+        fi
+    
+    - name: Set up QEMU
+      if: steps.decide.outputs.skip != 'true'
+      uses: docker/setup-qemu-action@v3
+    
+    - name: Set up Docker Buildx
+      if: steps.decide.outputs.skip != 'true'
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Docker Hub
+      if: steps.decide.outputs.skip != 'true'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+    - name: Build and push
+      if: steps.decide.outputs.skip != 'true'
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ${{ matrix.variant.dockerfile }}
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest${{ matrix.variant.suffix }}
+          ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}${{ matrix.variant.suffix }}
+        cache-from: type=gha,scope=freenginx${{ matrix.variant.suffix }}
+        cache-to: type=gha,mode=max,scope=freenginx${{ matrix.variant.suffix }}
+    
+    - name: Extract binaries from Docker image
+      if: steps.decide.outputs.skip != 'true'
+      run: |
+        # Extract amd64 binary
+        docker pull --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest${{ matrix.variant.suffix }}
+        CONTAINER_AMD64=$(docker create --platform linux/amd64 ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest${{ matrix.variant.suffix }})
+        docker cp $CONTAINER_AMD64:/usr/local/nginx ./freenginx-amd64
+        
+        rm -f freenginx-amd64/logs/access.log freenginx-amd64/logs/error.log
+        touch freenginx-amd64/logs/access.log freenginx-amd64/logs/error.log
+        
+        cp -r install-scripts/* freenginx-amd64/
+        chmod +x freenginx-amd64/*.sh
+        
+        tar czf freenginx-${{ steps.version.outputs.version }}-linux-amd64${{ matrix.variant.suffix }}.tar.gz -C freenginx-amd64 .
+        docker rm $CONTAINER_AMD64
+        rm -rf freenginx-amd64
+        
+        # Extract arm64 binary
+        docker pull --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest${{ matrix.variant.suffix }}
+        CONTAINER_ARM64=$(docker create --platform linux/arm64 ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest${{ matrix.variant.suffix }})
+        docker cp $CONTAINER_ARM64:/usr/local/nginx ./freenginx-arm64
+        
+        rm -f freenginx-arm64/logs/access.log freenginx-arm64/logs/error.log
+        touch freenginx-arm64/logs/access.log freenginx-arm64/logs/error.log
+        
+        cp -r install-scripts/* freenginx-arm64/
+        chmod +x freenginx-arm64/*.sh
+        
+        tar czf freenginx-${{ steps.version.outputs.version }}-linux-arm64${{ matrix.variant.suffix }}.tar.gz -C freenginx-arm64 .
+        docker rm $CONTAINER_ARM64
+        rm -rf freenginx-arm64
+    
+    - name: Create GitHub Release
+      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: freenginx-v${{ steps.version.outputs.version }}
+        name: freenginx ${{ steps.version.outputs.version }}
+        body: |
+          ## freenginx ${{ steps.version.outputs.version }} with HTTP/3 Support
+          
+          ### Features
+          - ✅ HTTP/2 support
+          - ✅ HTTP/3 (QUIC) support
+          - ✅ TLS 1.3
+          - ✅ Latest OpenSSL, PCRE2, and zlib
+          - ✅ Multi-architecture support (amd64, arm64)
+          - ✅ Multiple glibc versions for compatibility
+          
+          ### Docker Images
+          
+          **Standard (glibc 2.39+)** - Ubuntu 24.04 base:
+          ```bash
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}
+          ```
+          
+          **Compatible (glibc 2.31+)** - Debian 11 base:
+          ```bash
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest-compat
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}-compat
+          ```
+          
+          ### Binary Installation
+          
+          **AMD64 (x86_64)**:
+          ```bash
+          # Standard version
+          tar xzf freenginx-${{ steps.version.outputs.version }}-linux-amd64.tar.gz
+          
+          # Compatible version
+          tar xzf freenginx-${{ steps.version.outputs.version }}-linux-amd64-compat.tar.gz
+          
+          # Install
+          sudo ./install.sh
+          sudo systemctl start nginx
+          ```
+          
+          **ARM64 (aarch64)**:
+          ```bash
+          # Standard version
+          tar xzf freenginx-${{ steps.version.outputs.version }}-linux-arm64.tar.gz
+          
+          # Compatible version
+          tar xzf freenginx-${{ steps.version.outputs.version }}-linux-arm64-compat.tar.gz
+          
+          # Install
+          sudo ./install.sh
+          sudo systemctl start nginx
+          ```
+          
+          ### Build Information
+          - freenginx: ${{ steps.version.outputs.version }}
+          - Architectures: amd64, arm64
+          - glibc versions: 2.39 (standard), 2.31 (compat)
+          - Built: ${{ github.event.head_commit.timestamp }}
+          - Commit: ${{ github.sha }}
+        files: |
+          freenginx-${{ steps.version.outputs.version }}-linux-*.tar.gz
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

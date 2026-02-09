@@ -172,7 +172,8 @@ download_and_extract() {
 PCRE2_OWNER="PCRE2Project"  ; PCRE2_REPO="pcre2"
 ZLIB_OWNER="madler"         ; ZLIB_REPO="zlib"
 OPENSSL_OWNER="openssl"     ; OPENSSL_REPO="openssl"
-NGINX_OWNER="nginx"         ; NGINX_REPO="nginx"
+NGINX_OWNER="${NGINX_OWNER:-nginx}"
+NGINX_REPO="${NGINX_REPO:-nginx}"
 
 pcre2_raw_tag="$(get_latest_tag_from_github "$PCRE2_OWNER" "$PCRE2_REPO")"
 zlib_raw_tag="$(get_latest_tag_from_github  "$ZLIB_OWNER" "$ZLIB_REPO")"

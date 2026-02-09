@@ -25,7 +25,7 @@ This script automates the process of downloading and compiling the latest versio
 
 ### Option 1: Docker (Recommended)
 
-**Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
+**nginx - Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
 ```bash
 docker run -d \
   -p 80:80 \
@@ -34,7 +34,7 @@ docker run -d \
   caoweida2004/nginx-http3:latest
 ```
 
-**Compatible version** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11):
+**nginx - Compatible version** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11):
 ```bash
 docker run -d \
   -p 80:80 \
@@ -43,12 +43,36 @@ docker run -d \
   caoweida2004/nginx-http3:latest-compat
 ```
 
+**freenginx - Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
+```bash
+docker run -d \
+  -p 80:80 \
+  -p 443:443 \
+  -p 443:443/udp \
+  caoweida2004/freenginx-http3:latest
+```
+
+**freenginx - Compatible version** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11):
+```bash
+docker run -d \
+  -p 80:80 \
+  -p 443:443 \
+  -p 443:443/udp \
+  caoweida2004/freenginx-http3:latest-compat
+```
+
 See [README-Docker.md](README-Docker.md) for detailed Docker usage.
 
 ### Option 2: Build from Source
 
+**Build nginx**:
 ```bash
 bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
+```
+
+**Build freenginx**:
+```bash
+NGINX_OWNER=freenginx NGINX_REPO=nginx bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
 ```
 
 ---
