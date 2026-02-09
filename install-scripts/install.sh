@@ -89,6 +89,8 @@ if [ "$UPGRADE_MODE" = true ]; then
     
     print_msg "$YELLOW" "Upgrade mode: Backing up configuration..."
     
+    RESTART_AFTER=false
+    
     # Backup config
     BACKUP_DIR="$INSTALL_PREFIX/conf.backup.$(date +%Y%m%d_%H%M%S)"
     cp -r "$INSTALL_PREFIX/conf" "$BACKUP_DIR"
@@ -126,12 +128,27 @@ if [ "$UPGRADE_MODE" = true ]; then
     # Restart if was running
     if [ "$RESTART_AFTER" = true ]; then
         if [ "$INSTALL_TYPE" = "system" ]; then
+            print_msg "$YELLOW" "Restarting nginx service..."
             systemctl start nginx
-            print_msg "$GREEN" "✓ Service restarted"
+            sleep 1
+            if systemctl is-active --quiet nginx; then
+                print_msg "$GREEN" "✓ Service restarted successfully"
+            else
+                print_msg "$RED" "✗ Failed to restart service"
+                print_msg "$YELLOW" "Check logs: sudo journalctl -u nginx -n 50"
+            fi
         else
             "$INSTALL_PREFIX/sbin/nginx"
-            print_msg "$GREEN" "✓ Nginx restarted"
+            sleep 1
+            if pgrep -f "$INSTALL_PREFIX/sbin/nginx" > /dev/null; then
+                print_msg "$GREEN" "✓ Nginx restarted successfully"
+            else
+                print_msg "$RED" "✗ Failed to restart nginx"
+            fi
         fi
+    else
+        print_msg "$YELLOW" "Service was not running, not restarting"
+        print_msg "$YELLOW" "Start manually: sudo systemctl start nginx"
     fi
     
     print_msg "$GREEN" "\n=== Upgrade Complete ==="
