@@ -1,11 +1,11 @@
-FROM ubuntu:24.04
+# Build stage
+FROM ubuntu:24.04 AS builder
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
-LABEL description="Nginx with HTTP/3 (QUIC) and Post-Quantum Cryptography support"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install all build dependencies
+# Install build dependencies
 RUN apt-get update && \
     apt-get install -y \
     build-essential \
@@ -23,16 +23,25 @@ RUN apt-get update && \
     automake && \
     rm -rf /var/lib/apt/lists/*
 
-# Verify compilers are installed
-RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc && \
-    gcc --version && \
-    cc --version && \
-    make --version
+# Verify compilers
+RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc
 
-# Copy and run build script
+# Build nginx
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
     rm -rf /usr/local/src/* /tmp/nginx-builder.sh
+
+# Runtime stage
+FROM ubuntu:24.04
+
+LABEL maintainer="weida <caoweida2004@gmail.com>"
+LABEL description="Nginx with HTTP/3 (QUIC) support - statically linked"
+
+# Copy nginx from builder
+COPY --from=builder /usr/local/nginx /usr/local/nginx
+
+# Create nginx user
+RUN useradd -r -s /sbin/nologin nginx
 
 # Forward logs to docker log collector
 RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \

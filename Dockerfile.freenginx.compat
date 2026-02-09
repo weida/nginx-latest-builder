@@ -1,7 +1,7 @@
-FROM debian:11
+# Build stage
+FROM debian:11 AS builder
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
-LABEL description="freenginx with HTTP/3 - Compatible with older glibc (2.31+)"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_OWNER=freenginx
@@ -29,6 +29,16 @@ RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
     rm -rf /usr/local/src/* /tmp/nginx-builder.sh
+
+# Runtime stage
+FROM debian:11-slim
+
+LABEL maintainer="weida <caoweida2004@gmail.com>"
+LABEL description="freenginx with HTTP/3 - Compatible with older glibc (2.31+) - statically linked"
+
+COPY --from=builder /usr/local/nginx /usr/local/nginx
+
+RUN useradd -r -s /sbin/nologin nginx || true
 
 RUN ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
     ln -sf /dev/stderr /usr/local/nginx/logs/error.log
