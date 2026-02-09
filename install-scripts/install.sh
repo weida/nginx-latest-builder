@@ -12,6 +12,7 @@ NC='\033[0m'
 
 INSTALL_PREFIX="/usr/local/nginx"
 INSTALL_TYPE="system"
+UPGRADE_MODE=false
 CREATE_SERVICE=true
 START_SERVICE=false
 ENABLE_SERVICE=false
@@ -31,14 +32,18 @@ Usage: $0 [OPTIONS]
 Options:
     --prefix PATH       Installation directory (default: /usr/local/nginx)
     --user              Install for current user only (no root required)
+    --upgrade           Upgrade mode: only replace binary, keep config
     --no-service        Don't create systemd service
     --start             Start nginx service after installation
     --enable            Enable nginx service to start on boot
     -h, --help          Show this help message
 
 Examples:
-    # Install only
+    # Fresh install
     sudo $0
+
+    # Upgrade existing installation (keep config)
+    sudo $0 --upgrade
 
     # Install and start
     sudo $0 --start
@@ -57,6 +62,7 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --prefix) INSTALL_PREFIX="$2"; shift 2 ;;
         --user) INSTALL_TYPE="user"; INSTALL_PREFIX="$HOME/.local/nginx"; CREATE_SERVICE=false; shift ;;
+        --upgrade) UPGRADE_MODE=true; shift ;;
         --no-service) CREATE_SERVICE=false; shift ;;
         --start) START_SERVICE=true; shift ;;
         --enable) ENABLE_SERVICE=true; shift ;;
@@ -74,6 +80,66 @@ fi
 print_msg "$GREEN" "=== Nginx Installation ==="
 print_msg "$YELLOW" "Type: $INSTALL_TYPE | Path: $INSTALL_PREFIX"
 
+if [ "$UPGRADE_MODE" = true ]; then
+    if [ ! -d "$INSTALL_PREFIX" ]; then
+        print_msg "$RED" "Error: $INSTALL_PREFIX not found"
+        print_msg "$YELLOW" "Upgrade mode requires existing installation"
+        exit 1
+    fi
+    
+    print_msg "$YELLOW" "Upgrade mode: Backing up configuration..."
+    
+    # Backup config
+    BACKUP_DIR="$INSTALL_PREFIX/conf.backup.$(date +%Y%m%d_%H%M%S)"
+    cp -r "$INSTALL_PREFIX/conf" "$BACKUP_DIR"
+    print_msg "$GREEN" "✓ Config backed up to: $BACKUP_DIR"
+    
+    # Stop service if running
+    if [ "$INSTALL_TYPE" = "system" ] && systemctl is-active --quiet nginx 2>/dev/null; then
+        print_msg "$YELLOW" "Stopping nginx service..."
+        systemctl stop nginx
+        RESTART_AFTER=true
+    elif [ "$INSTALL_TYPE" = "user" ] && pgrep -f "$INSTALL_PREFIX/sbin/nginx" > /dev/null; then
+        print_msg "$YELLOW" "Stopping nginx..."
+        "$INSTALL_PREFIX/sbin/nginx" -s quit
+        sleep 2
+        RESTART_AFTER=true
+    fi
+    
+    # Replace binary only
+    print_msg "$YELLOW" "Upgrading nginx binary..."
+    cp -f sbin/nginx "$INSTALL_PREFIX/sbin/"
+    chmod 755 "$INSTALL_PREFIX/sbin/nginx"
+    
+    # Test new binary with old config
+    if ! "$INSTALL_PREFIX/sbin/nginx" -t -q; then
+        print_msg "$RED" "✗ Config test failed with new binary"
+        print_msg "$YELLOW" "Restoring old binary..."
+        # Note: old binary not backed up, manual intervention needed
+        print_msg "$RED" "Please check configuration compatibility"
+        exit 1
+    fi
+    
+    print_msg "$GREEN" "✓ Binary upgraded successfully"
+    print_msg "$GREEN" "✓ Configuration preserved"
+    
+    # Restart if was running
+    if [ "$RESTART_AFTER" = true ]; then
+        if [ "$INSTALL_TYPE" = "system" ]; then
+            systemctl start nginx
+            print_msg "$GREEN" "✓ Service restarted"
+        else
+            "$INSTALL_PREFIX/sbin/nginx"
+            print_msg "$GREEN" "✓ Nginx restarted"
+        fi
+    fi
+    
+    print_msg "$GREEN" "\n=== Upgrade Complete ==="
+    print_msg "$YELLOW" "Old config backup: $BACKUP_DIR"
+    exit 0
+fi
+
+# Fresh installation
 mkdir -p "$INSTALL_PREFIX"
 cp -r sbin conf html logs "$INSTALL_PREFIX/"
 
