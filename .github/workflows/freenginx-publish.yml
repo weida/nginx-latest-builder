@@ -149,7 +149,7 @@ jobs:
         ls -lh release-files/
     
     - name: Create GitHub Release
-      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       uses: softprops/action-gh-release@v1
       with:
         tag_name: freenginx-v${{ steps.version.outputs.version }}
@@ -222,7 +222,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Update Docker Hub Description
-      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       run: |
         sudo apt-get update && sudo apt-get install -y jq
         chmod +x update-dockerhub-description-freenginx.sh
