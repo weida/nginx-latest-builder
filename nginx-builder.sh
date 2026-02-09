@@ -235,7 +235,15 @@ fi
 #-----------------------------------------------------------
 # 8) Build Nginx with these libraries (static linking)
 #-----------------------------------------------------------
-cd "$SRC_DIR/${pcre2_dir}" && (./autogen.sh || ./configure)
+cd "$SRC_DIR/${pcre2_dir}" || exit 1
+if [ -f "./autogen.sh" ]; then
+  ./autogen.sh
+elif [ -f "./configure" ]; then
+  ./configure
+else
+  echo "!!! PCRE2 configure not found"
+  exit 1
+fi
 
 cd "$SRC_DIR/$nginx_dir" || {
   echo "!!! Failed to cd into $SRC_DIR/$nginx_dir"
