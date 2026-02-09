@@ -27,7 +27,7 @@ RUN yum install -y \
     automake && \
     yum clean all
 
-RUN which gcc && which cc || ln -s /usr/bin/gcc /usr/bin/cc
+RUN which cc || ln -s /usr/bin/gcc /usr/bin/cc
 
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
