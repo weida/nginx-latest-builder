@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: '0 0 * * 0'
+    - cron: '0 2 * * *'
 
 permissions:
   contents: write
@@ -25,6 +25,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         variant:
           - { dockerfile: 'Dockerfile.freenginx', suffix: '', glibc: '2.39', base: 'Ubuntu 24.04' }
@@ -36,7 +37,12 @@ jobs:
     - name: Get freenginx version
       id: version
       run: |
-        VERSION=$(curl -s "https://api.github.com/repos/freenginx/nginx/tags" | grep -oP '"name":\s*"\K[^"]+' | head -1 | sed 's/release-//')
+        set -euo pipefail
+        VERSION="$(curl -fsSL --retry 3 --retry-delay 2 "https://api.github.com/repos/freenginx/nginx/tags?per_page=1" | jq -r '.[0].name | sub("^release-"; "")')"
+        if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+          echo "Failed to resolve freenginx version"
+          exit 1
+        fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "freenginx version: $VERSION (glibc ${{ matrix.variant.glibc }}, ${{ matrix.variant.base }})"
     
@@ -45,7 +51,12 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        set -euo pipefail
         VERSION="${{ steps.version.outputs.version }}"
+        if [ -z "$VERSION" ]; then
+          echo "version output is empty"
+          exit 1
+        fi
         if gh release view "freenginx-v$VERSION" 2>/dev/null; then
           echo "exists=true" >> $GITHUB_OUTPUT
           echo "Version freenginx-v$VERSION already exists"
@@ -57,6 +68,7 @@ jobs:
     - name: Decide build
       id: decide
       run: |
+        set -euo pipefail
         if [ "${{ steps.check.outputs.exists }}" = "true" ] && [ "${{ inputs.force_build }}" != "true" ]; then
           echo "skip=true" >> $GITHUB_OUTPUT
           echo "Skipping build - version exists and force_build is false"
@@ -64,6 +76,26 @@ jobs:
           echo "skip=false" >> $GITHUB_OUTPUT
           echo "Proceeding with build"
         fi
+
+    - name: Validate build metadata
+      if: steps.decide.outputs.skip != 'true'
+      run: |
+        set -euo pipefail
+        VERSION="${{ steps.version.outputs.version }}"
+        USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+        IMAGE="${USERNAME}/freenginx-http3:${VERSION}${{ matrix.variant.suffix }}"
+
+        if [ -z "$USERNAME" ]; then
+          echo "DOCKERHUB_USERNAME is empty"
+          exit 1
+        fi
+
+        if [ -z "$VERSION" ]; then
+          echo "version is empty"
+          exit 1
+        fi
+
+        echo "Building image tags for $IMAGE"
     
     - name: Set up QEMU
       if: steps.decide.outputs.skip != 'true'
@@ -136,20 +168,20 @@ jobs:
         retention-days: 7
     
     - name: Download all artifacts
-      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
     
     - name: Prepare release files
-      if: steps.decide.outputs.skip != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       run: |
         mkdir -p release-files
         find ./artifacts -name "*.tar.gz" -exec cp {} release-files/ \;
         ls -lh release-files/
     
     - name: Create GitHub Release
-      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       uses: softprops/action-gh-release@v1
       with:
         tag_name: freenginx-v${{ steps.version.outputs.version }}
@@ -222,7 +254,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Update Docker Hub Description
-      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
+      if: steps.decide.outputs.skip != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && github.ref == 'refs/heads/main' && matrix.variant.suffix == ''
       run: |
         sudo apt-get update && sudo apt-get install -y jq
         chmod +x update-dockerhub-description-freenginx.sh
