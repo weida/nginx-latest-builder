@@ -1,6 +1,21 @@
 # Build New Nginx with Latest Dependencies
 
-This script automates the process of downloading and compiling the latest versions of **PCRE2**, **zlib**, **OpenSSL**, **liboqs**, and **Nginx**. It retrieves the latest releases from GitHub, compiles them statically, and installs a fully functional version of Nginx with **HTTP/3**, **TLS 1.3**, and **Post-Quantum Cryptography** support.
+This repository builds the latest **mainline** nginx and freenginx packages with current **PCRE2**, **zlib**, **OpenSSL**, **liboqs**, and **HTTP/3** support.
+
+It is primarily a **test / tracking / early-adoption** build project. The Docker images and GitHub releases follow upstream mainline quickly and should not be treated as a long-term stable distribution channel.
+
+## Intended Use
+
+- Track upstream mainline nginx and freenginx quickly
+- Test new HTTP/3 / TLS / OpenSSL combinations
+- Validate compatibility on modern and older glibc targets
+
+## Not a Stable Distribution
+
+- Mainline versions can change behavior between releases
+- Older GitHub releases are intentionally pruned
+- Docker tags may move when `latest` or `latest-compat` is rebuilt
+- Production users should pin explicit version tags instead of relying on `latest`
 
 ---
 
@@ -19,11 +34,19 @@ This script automates the process of downloading and compiling the latest versio
 - ✅ Multi-architecture Docker images (x86_64, ARM64)
 - ✅ Automated CI/CD builds and releases
 
+## Release Retention Policy
+
+- GitHub Releases keep only the most recent mainline builds for each track
+- Docker Hub keeps the runnable image tags used for testing and version pinning
+- If you need reproducibility, pin an explicit Docker tag such as `1.29.8` or `1.29.8-compat`
+
 ---
 
 ## Quick Start
 
 ### Option 1: Docker (Recommended)
+
+For testing only. For repeatable environments, replace `latest` with a concrete version tag.
 
 **nginx - Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
 ```bash
@@ -67,12 +90,12 @@ See [README-Docker.md](README-Docker.md) for detailed Docker usage.
 
 **Build nginx**:
 ```bash
-bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
+bash <(curl -L https://raw.githubusercontent.com/weida/nginx-mainline-test-builds/refs/heads/main/nginx-builder.sh)
 ```
 
 **Build freenginx**:
 ```bash
-NGINX_OWNER=freenginx NGINX_REPO=nginx bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
+NGINX_OWNER=freenginx NGINX_REPO=nginx bash <(curl -L https://raw.githubusercontent.com/weida/nginx-mainline-test-builds/refs/heads/main/nginx-builder.sh)
 ```
 
 ---
@@ -108,7 +131,7 @@ For CentOS, **perl-IPC-Cmd** is also required. These dependencies will be instal
 Run the following command to download and execute the script, building the latest version of Nginx:
 
 ```bash
-bash <(curl -L https://raw.githubusercontent.com/weida/nginx-http3-builder/refs/heads/main/nginx-builder.sh)
+bash <(curl -L https://raw.githubusercontent.com/weida/nginx-mainline-test-builds/refs/heads/main/nginx-builder.sh)
 ```
 
 ### Output Example
@@ -203,3 +226,4 @@ ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
 1. The script automatically installs dependencies using the detected package manager (`yum` or `apt`).
 2. Ensure sufficient disk space and administrative privileges before running the script.
 3. If your distribution is not listed under **Supported Operating Systems**, you may need to make manual adjustments.
+4. Docker images and GitHub Releases in this repository are for mainline testing and validation, not long-term stable support.

@@ -56,8 +56,8 @@ docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest
 - Best for: Older systems (CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 18.04+)
 
 ## Links
-- GitHub: https://github.com/weida/nginx-latest-builder
-- Documentation: https://github.com/weida/nginx-latest-builder/blob/main/README-Docker.md"
+- GitHub: https://github.com/weida/nginx-mainline-test-builds
+- Documentation: https://github.com/weida/nginx-mainline-test-builds/blob/main/README-Docker.md"
 
 echo "Updating Docker Hub repository description..."
 

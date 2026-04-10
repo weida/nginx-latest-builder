@@ -1,10 +1,19 @@
 # Nginx Docker Usage Guide
 
-Complete beginner-friendly guide with ready-to-use examples.
+Testing-oriented usage guide for the mainline Docker images published by this repository.
+
+## Important
+
+- These images track upstream mainline quickly
+- They are meant for testing, evaluation, and early validation
+- Older GitHub releases are not kept forever
+- For anything repeatable, pin an explicit version tag instead of `latest`
 
 ## 🚀 Quick Start (Choose One)
 
 ### Option 1: Instant Start (No Configuration)
+
+Use this for quick testing. For repeatable environments, replace `latest` with a concrete version tag.
 
 **Standard version** (Ubuntu 22.04+, Debian 12+, RHEL 9+):
 ```bash
@@ -26,7 +35,7 @@ mkdir html
 echo "<h1>Hello World</h1>" > html/index.html
 
 # 2. Download docker-compose.yml
-curl -O https://raw.githubusercontent.com/weida/nginx-http3-builder/main/examples/basic/docker-compose.yml
+curl -O https://raw.githubusercontent.com/weida/nginx-mainline-test-builds/main/examples/basic/docker-compose.yml
 
 # 3. Start
 docker-compose up -d
@@ -176,9 +185,9 @@ See `examples/` folder for:
 
 ## 🔗 Links
 
-- **Examples**: https://github.com/weida/nginx-http3-builder/tree/main/examples
-- **GitHub**: https://github.com/weida/nginx-http3-builder
-- **Get Help**: https://github.com/weida/nginx-http3-builder/issues
+- **Examples**: https://github.com/weida/nginx-mainline-test-builds/tree/main/examples
+- **GitHub**: https://github.com/weida/nginx-mainline-test-builds
+- **Get Help**: https://github.com/weida/nginx-mainline-test-builds/issues
 
 ## ✨ Features
 
@@ -212,3 +221,9 @@ See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration
 - For: CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11
 
 **Not sure which to use?** Try standard first. If you get glibc errors, use compat.
+
+## Release Policy
+
+- `latest` and `latest-compat` are moving tags
+- Version tags are better for reproducible testing
+- GitHub Releases keep only a small recent history because this project follows mainline, not a stable branch

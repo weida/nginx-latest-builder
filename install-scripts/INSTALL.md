@@ -223,6 +223,6 @@ uname -m
 
 ## Support
 
-- GitHub: https://github.com/weida/nginx-latest-builder
-- Issues: https://github.com/weida/nginx-latest-builder/issues
+- GitHub: https://github.com/weida/nginx-mainline-test-builds
+- Issues: https://github.com/weida/nginx-mainline-test-builds/issues
 - Documentation: https://nginx.org/en/docs/
