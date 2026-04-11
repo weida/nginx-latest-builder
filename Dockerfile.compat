@@ -42,9 +42,10 @@ LABEL maintainer="weida <caoweida2004@gmail.com>"
 LABEL description="Nginx with HTTP/3 - Compatible with CentOS 7+ (glibc 2.17+) - statically linked"
 
 COPY --from=builder /usr/local/nginx /usr/local/nginx
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
-RUN microdnf install -y shadow-utils && \
-    useradd -r -s /sbin/nologin nginx && \
+RUN microdnf update -y && \
     microdnf clean all
 
 EXPOSE 80 443 443/udp

@@ -197,7 +197,7 @@ See `examples/` folder for:
 - Latest OpenSSL, PCRE2, and zlib
 - Multi-architecture (amd64, arm64)
 - Multiple glibc versions for compatibility
-- Auto-updated weekly
+- Auto-checked daily
 
 ## 🔐 Post-Quantum Cryptography
 
@@ -216,9 +216,9 @@ See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration
 - For: Ubuntu 22.04+, Debian 12+, RHEL 9+
 
 **Compatible (`latest-compat`):**
-- Base: Debian 11
-- glibc: 2.31
-- For: CentOS 7, Alibaba Cloud Linux 3, Ubuntu 20.04, Debian 11
+- Base: CentOS 7 build + AlmaLinux 8 minimal runtime
+- glibc: 2.17+
+- For: CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 20.04, Debian 11
 
 **Not sure which to use?** Try standard first. If you get glibc errors, use compat.
 

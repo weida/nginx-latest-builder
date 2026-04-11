@@ -15,7 +15,7 @@ if [ -z "$DOCKERHUB_TOKEN" ]; then
 fi
 
 # Short description (100 characters max)
-SHORT_DESC="Nginx with HTTP/3, TLS 1.3, latest OpenSSL. Multi-arch (amd64/arm64). Auto-updated weekly."
+SHORT_DESC="Nginx with HTTP/3, TLS 1.3, latest OpenSSL. Multi-arch (amd64/arm64). Checked daily."
 
 # Full description
 FULL_DESC="# Nginx with HTTP/3
@@ -40,7 +40,7 @@ docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest
 - ✅ Latest OpenSSL 3.4+, PCRE2, zlib
 - ✅ Multi-architecture (amd64, arm64)
 - ✅ Statically linked for minimal dependencies
-- ✅ Automated weekly builds
+- ✅ Daily upstream checks
 
 ## Version Selection
 
