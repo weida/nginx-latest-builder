@@ -28,8 +28,8 @@ jobs:
       fail-fast: false
       matrix:
         variant:
-          - { dockerfile: 'Dockerfile.freenginx', suffix: '', glibc: '2.39', base: 'Ubuntu 24.04' }
-          - { dockerfile: 'Dockerfile.freenginx.compat', suffix: '-compat', glibc: '2.17', base: 'CentOS 7' }
+          - { dockerfile: 'Dockerfile.freenginx', suffix: '', glibc: '2.39', base: 'Ubuntu 24.04', cache_scope: 'freenginx-standard' }
+          - { dockerfile: 'Dockerfile.freenginx.compat', suffix: '-compat', glibc: '2.17', base: 'CentOS 7 build + AlmaLinux 8 runtime', cache_scope: 'freenginx-compat' }
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -123,8 +123,36 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest${{ matrix.variant.suffix }}
           ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}${{ matrix.variant.suffix }}
-        cache-from: type=gha,scope=freenginx${{ matrix.variant.suffix }}
-        cache-to: type=gha,mode=max,scope=freenginx${{ matrix.variant.suffix }}
+        cache-from: type=gha,scope=${{ matrix.variant.cache_scope }}
+        cache-to: type=gha,mode=max,scope=${{ matrix.variant.cache_scope }}
+
+    - name: Smoke test image
+      if: steps.decide.outputs.skip != 'true'
+      run: |
+        set -euo pipefail
+        IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}${{ matrix.variant.suffix }}"
+        NAME="freenginx-smoke${{ matrix.variant.suffix }}"
+        PORT=8080
+
+        docker pull --platform linux/amd64 "$IMAGE"
+
+        cleanup() {
+          docker rm -f "$NAME" >/dev/null 2>&1 || true
+        }
+        trap cleanup EXIT
+
+        docker run -d --rm --platform linux/amd64 --name "$NAME" -p ${PORT}:80 "$IMAGE"
+
+        for _ in $(seq 1 20); do
+          if curl -fsS "http://127.0.0.1:${PORT}/" >/tmp/freenginx-smoke-response.txt; then
+            break
+          fi
+          sleep 1
+        done
+
+        curl -fsS "http://127.0.0.1:${PORT}/" >/tmp/freenginx-smoke-response.txt
+        docker logs "$NAME" >/tmp/freenginx-smoke-logs.txt 2>&1 || true
+        test -s /tmp/freenginx-smoke-response.txt
     
     - name: Extract binaries from Docker image
       if: steps.decide.outputs.skip != 'true'
@@ -205,7 +233,7 @@ jobs:
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}
           ```
           
-          **Compatible (glibc 2.31+)** - Debian 11 base:
+          **Compatible (glibc 2.17+)** - CentOS 7 build with AlmaLinux 8 minimal runtime:
           ```bash
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:latest-compat
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/freenginx-http3:${{ steps.version.outputs.version }}-compat
