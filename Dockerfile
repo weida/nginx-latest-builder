@@ -3,7 +3,9 @@ FROM ubuntu:24.04 AS builder
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
 
+ARG NGINX_RAW_TAG
 ENV DEBIAN_FRONTEND=noninteractive
+ENV NGINX_RAW_TAG=${NGINX_RAW_TAG}
 
 # Install build dependencies
 RUN apt-get update && \

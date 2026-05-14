@@ -66,25 +66,28 @@ get_latest_tag_from_github() {
 
 #-----------------------------------------------------------
 # 1b) Function: get_latest_mainline_nginx_tag
-#    - For nginx/freenginx, get the absolute latest mainline version
-#    - Try releases first, fallback to tags
+#    - For nginx/freenginx, resolve the highest release-* tag.
+#    - nginx.org may publish security tags before GitHub Releases are updated.
 #-----------------------------------------------------------
 get_latest_mainline_nginx_tag() {
   local owner="$1"
   local repo="$2"
-  local json tag_name
+  local json version
 
-  # Try releases first
-  json="$(curl -s "https://api.github.com/repos/${owner}/${repo}/releases")"
-  tag_name="$(echo "$json" | grep -oP '"tag_name":\s*"\K[^"]+' | head -1)"
-  
-  # If no releases, try tags
-  if [ -z "$tag_name" ]; then
-    json="$(curl -s "https://api.github.com/repos/${owner}/${repo}/tags")"
-    tag_name="$(echo "$json" | grep -oP '"name":\s*"\K[^"]+' | head -1)"
+  if [ -n "${NGINX_RAW_TAG:-}" ]; then
+    echo "$NGINX_RAW_TAG"
+    return 0
   fi
-  
-  echo "$tag_name"
+
+  json="$(curl -s "https://api.github.com/repos/${owner}/${repo}/tags?per_page=100")"
+  version="$(
+    echo "$json" |
+      grep -oP '"name":\s*"release-\K[0-9]+\.[0-9]+\.[0-9]+' |
+      sort -V |
+      tail -1
+  )"
+
+  [ -n "$version" ] && echo "release-$version"
 }
 
 #-----------------------------------------------------------
@@ -331,5 +334,4 @@ echo "Features enabled:"
 echo "  - HTTP/2"
 echo "  - HTTP/3 (QUIC)"
 echo "  - TLS 1.3"
-
 

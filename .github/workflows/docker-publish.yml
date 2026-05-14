@@ -39,11 +39,17 @@ jobs:
       id: version
       run: |
         set -euo pipefail
-        NGINX_VERSION="$(curl -fsSL --retry 3 --retry-delay 2 "https://api.github.com/repos/nginx/nginx/releases?per_page=1" | jq -r '.[0].tag_name | sub("^release-"; "")')"
+        NGINX_VERSION="$(
+          curl -fsSL --retry 3 --retry-delay 2 "https://api.github.com/repos/nginx/nginx/tags?per_page=100" |
+            jq -r '.[].name | select(test("^release-[0-9]+\\.[0-9]+\\.[0-9]+$")) | sub("^release-"; "")' |
+            sort -V |
+            tail -1
+        )"
         if [ -z "$NGINX_VERSION" ] || [ "$NGINX_VERSION" = "null" ]; then
           echo "Failed to resolve nginx version"
           exit 1
         fi
+        echo "nginx_raw_tag=release-$NGINX_VERSION" >> $GITHUB_OUTPUT
         echo "nginx_version=$NGINX_VERSION" >> $GITHUB_OUTPUT
         echo "Nginx version: $NGINX_VERSION (glibc ${{ matrix.variant.glibc }})"
     
@@ -124,6 +130,8 @@ jobs:
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:latest${{ matrix.variant.suffix }}
           ${{ secrets.DOCKERHUB_USERNAME }}/nginx-http3:${{ steps.version.outputs.nginx_version }}${{ matrix.variant.suffix }}
+        build-args: |
+          NGINX_RAW_TAG=${{ steps.version.outputs.nginx_raw_tag }}
         cache-from: type=gha,scope=${{ matrix.variant.cache_scope }}
         cache-to: type=gha,mode=max,scope=${{ matrix.variant.cache_scope }}
 
