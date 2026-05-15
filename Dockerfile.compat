@@ -4,9 +4,11 @@ FROM centos:7 AS builder
 LABEL maintainer="weida <caoweida2004@gmail.com>"
 
 ARG NGINX_RAW_TAG
+ARG OPENSSL_RAW_TAG=openssl-3.5.5
 ENV DEBIAN_FRONTEND=noninteractive
 ENV OPENSSL_EXTRA_OPTS="-std=c99 no-asm -D_GNU_SOURCE"
 ENV NGINX_RAW_TAG=${NGINX_RAW_TAG}
+ENV OPENSSL_RAW_TAG=${OPENSSL_RAW_TAG}
 
 # Switch to vault.centos.org (CentOS 7 is EOL)
 RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*.repo && \

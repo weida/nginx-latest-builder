@@ -4,8 +4,10 @@ FROM ubuntu:24.04 AS builder
 LABEL maintainer="weida <caoweida2004@gmail.com>"
 
 ARG NGINX_RAW_TAG
+ARG OPENSSL_RAW_TAG=openssl-3.5.5
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_RAW_TAG=${NGINX_RAW_TAG}
+ENV OPENSSL_RAW_TAG=${OPENSSL_RAW_TAG}
 
 # Install build dependencies
 RUN apt-get update && \
