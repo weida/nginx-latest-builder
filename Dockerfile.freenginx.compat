@@ -46,10 +46,10 @@ RUN printf '%s\n' \
     'enabled=1' \
     'gpgcheck=0' \
     > /etc/yum.repos.d/CentOS-SCLo.repo && \
-    yum install -y devtoolset-11-gcc devtoolset-11-gcc-c++ && \
+    yum install -y devtoolset-9-gcc devtoolset-9-gcc-c++ && \
     yum clean all
 
-ENV PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
+ENV PATH=/opt/rh/devtoolset-9/root/usr/bin:$PATH
 
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
