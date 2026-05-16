@@ -154,14 +154,16 @@ jobs:
 
         for _ in $(seq 1 20); do
           if curl -fsS "http://127.0.0.1:${PORT}/" >/tmp/nginx-smoke-response.txt; then
-            break
+            test -s /tmp/nginx-smoke-response.txt
+            exit 0
           fi
           sleep 1
         done
 
-        curl -fsS "http://127.0.0.1:${PORT}/" >/tmp/nginx-smoke-response.txt
+        docker ps -a
         docker logs "$NAME" >/tmp/nginx-smoke-logs.txt 2>&1 || true
-        test -s /tmp/nginx-smoke-response.txt
+        cat /tmp/nginx-smoke-logs.txt
+        curl -fsS "http://127.0.0.1:${PORT}/" >/tmp/nginx-smoke-response.txt
     
     - name: Extract binaries from Docker image
       if: steps.decide.outputs.skip != 'true'

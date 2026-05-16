@@ -38,10 +38,15 @@ RUN bash /tmp/nginx-builder.sh && \
     ln -sf /dev/stderr /usr/local/nginx/logs/error.log
 
 # Runtime stage
-FROM gcr.io/distroless/base-debian12
+FROM ubuntu:24.04
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
-LABEL description="Nginx with HTTP/3 (QUIC) support - statically linked - minimal image"
+LABEL description="Nginx with HTTP/3 (QUIC) support - Ubuntu 24.04 runtime"
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy nginx from builder
 COPY --from=builder /usr/local/nginx /usr/local/nginx
