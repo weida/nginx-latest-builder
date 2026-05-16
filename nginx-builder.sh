@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This script fetches "latest" releases from GitHub for PCRE2, zlib, OpenSSL, and Nginx,
+# This script fetches releases from GitHub for PCRE2, zlib, OpenSSL, and Nginx,
 # removes common prefixes (e.g. "release-", "v") from each tag,
 # downloads the tarballs, extracts them, and renames them to a consistent format.
 # Finally, it statically compiles Nginx using those libraries.
@@ -65,28 +65,20 @@ get_latest_tag_from_github() {
 }
 
 #-----------------------------------------------------------
-# 1a) Function: get_latest_openssl_lts_tag
-#    - nginx builds should stay on the OpenSSL 3.5 LTS line.
-#    - OpenSSL 4.x can appear as GitHub "latest" before nginx and
-#      older compat toolchains are ready for it.
+# 1a) Function: get_latest_openssl_tag
+#    - Retrieves the latest OpenSSL release unless OPENSSL_RAW_TAG is set.
 #-----------------------------------------------------------
-get_latest_openssl_lts_tag() {
-  local json version
+get_latest_openssl_tag() {
+  local json tag_name
 
   if [ -n "${OPENSSL_RAW_TAG:-}" ]; then
     echo "$OPENSSL_RAW_TAG"
     return 0
   fi
 
-  json="$(curl -s "https://api.github.com/repos/openssl/openssl/tags?per_page=100")"
-  version="$(
-    echo "$json" |
-      grep -oP '"name":\s*"openssl-\K3\.5\.[0-9]+' |
-      sort -V |
-      tail -1
-  )"
-
-  [ -n "$version" ] && echo "openssl-$version"
+  json="$(curl -s "https://api.github.com/repos/openssl/openssl/releases/latest")"
+  tag_name="$(echo "$json" | grep -oP '"tag_name":\s*"\K[^"]+')"
+  echo "$tag_name"
 }
 
 #-----------------------------------------------------------
@@ -213,13 +205,13 @@ NGINX_REPO="${NGINX_REPO:-nginx}"
 
 pcre2_raw_tag="$(get_latest_tag_from_github "$PCRE2_OWNER" "$PCRE2_REPO")"
 zlib_raw_tag="$(get_latest_tag_from_github  "$ZLIB_OWNER" "$ZLIB_REPO")"
-openssl_raw_tag="$(get_latest_openssl_lts_tag)"
+openssl_raw_tag="$(get_latest_openssl_tag)"
 nginx_raw_tag="$(get_latest_mainline_nginx_tag "$NGINX_OWNER" "$NGINX_REPO")"
 
 # fallback if any empty
 [ -z "$pcre2_raw_tag" ]   && pcre2_raw_tag="10.44"
 [ -z "$zlib_raw_tag" ]    && zlib_raw_tag="1.3.1"
-[ -z "$openssl_raw_tag" ] && openssl_raw_tag="openssl-3.5.5"
+[ -z "$openssl_raw_tag" ] && openssl_raw_tag="openssl-4.0.0"
 [ -z "$nginx_raw_tag" ]   && nginx_raw_tag="release-1.27.3"
 
 echo "Raw PCRE2 tag:   $pcre2_raw_tag"

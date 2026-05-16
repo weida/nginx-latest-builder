@@ -3,9 +3,11 @@ FROM ubuntu:24.04 AS builder
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
 
+ARG OPENSSL_RAW_TAG=openssl-4.0.0
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_OWNER=freenginx
 ENV NGINX_REPO=nginx
+ENV OPENSSL_RAW_TAG=${OPENSSL_RAW_TAG}
 
 # Install build dependencies
 RUN apt-get update && \

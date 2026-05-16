@@ -4,7 +4,7 @@ FROM centos:7 AS builder
 LABEL maintainer="weida <caoweida2004@gmail.com>"
 
 ARG NGINX_RAW_TAG
-ARG OPENSSL_RAW_TAG=openssl-3.5.5
+ARG OPENSSL_RAW_TAG=openssl-4.0.0
 ENV DEBIAN_FRONTEND=noninteractive
 ENV OPENSSL_EXTRA_OPTS="-std=c99 no-asm -D_GNU_SOURCE"
 ENV NGINX_RAW_TAG=${NGINX_RAW_TAG}
@@ -32,6 +32,24 @@ RUN yum install -y \
     kernel-headers \
     glibc-devel && \
     yum clean all
+
+RUN printf '%s\n' \
+    '[centos-sclo-sclo]' \
+    'name=CentOS-7 - SCLo sclo' \
+    'baseurl=http://vault.centos.org/centos/7/sclo/$basearch/sclo/' \
+    'enabled=1' \
+    'gpgcheck=0' \
+    '' \
+    '[centos-sclo-rh]' \
+    'name=CentOS-7 - SCLo rh' \
+    'baseurl=http://vault.centos.org/centos/7/sclo/$basearch/rh/' \
+    'enabled=1' \
+    'gpgcheck=0' \
+    > /etc/yum.repos.d/CentOS-SCLo.repo && \
+    yum install -y devtoolset-11-gcc devtoolset-11-gcc-c++ && \
+    yum clean all
+
+ENV PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH
 
 COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
