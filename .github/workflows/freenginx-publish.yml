@@ -69,9 +69,9 @@ jobs:
       id: decide
       run: |
         set -euo pipefail
-        if [ "${{ steps.check.outputs.exists }}" = "true" ] && [ "${{ inputs.force_build }}" != "true" ]; then
+        if [ "${{ github.event_name }}" = "schedule" ] && [ "${{ steps.check.outputs.exists }}" = "true" ] && [ "${{ inputs.force_build }}" != "true" ]; then
           echo "skip=true" >> $GITHUB_OUTPUT
-          echo "Skipping build - version exists and force_build is false"
+          echo "Skipping scheduled build - version exists and force_build is false"
         else
           echo "skip=false" >> $GITHUB_OUTPUT
           echo "Proceeding with build"
