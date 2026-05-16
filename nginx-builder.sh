@@ -202,6 +202,7 @@ ZLIB_OWNER="madler"         ; ZLIB_REPO="zlib"
 OPENSSL_OWNER="openssl"     ; OPENSSL_REPO="openssl"
 NGINX_OWNER="${NGINX_OWNER:-nginx}"
 NGINX_REPO="${NGINX_REPO:-nginx}"
+OPENSSL_BUILD_OPTS="${OPENSSL_BUILD_OPTS:-no-tests no-docs no-apps}"
 
 pcre2_raw_tag="$(get_latest_tag_from_github "$PCRE2_OWNER" "$PCRE2_REPO")"
 zlib_raw_tag="$(get_latest_tag_from_github  "$ZLIB_OWNER" "$ZLIB_REPO")"
@@ -297,7 +298,7 @@ $NGINX_CONFIGURE \
   --with-pcre="${SRC_DIR}/${pcre2_dir}" \
   --with-zlib="${SRC_DIR}/${zlib_dir}" \
   --with-openssl="${SRC_DIR}/${openssl_dir}" \
-  --with-openssl-opt="enable-tls1_3 ${OPENSSL_EXTRA_OPTS}" \
+  --with-openssl-opt="enable-tls1_3 ${OPENSSL_BUILD_OPTS} ${OPENSSL_EXTRA_OPTS}" \
   --with-http_ssl_module \
   --with-http_v2_module \
   --with-http_v3_module \
