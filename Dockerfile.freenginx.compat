@@ -33,16 +33,21 @@ RUN yum install -y \
     glibc-devel && \
     yum clean all
 
-RUN printf '%s\n' \
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+      SCL_ROOT="https://vault.centos.org/altarch/7"; \
+    else \
+      SCL_ROOT="https://vault.centos.org/centos/7"; \
+    fi && \
+    printf '%s\n' \
     '[centos-sclo-sclo]' \
     'name=CentOS-7 - SCLo sclo' \
-    'baseurl=http://vault.centos.org/centos/7/sclo/$basearch/sclo/' \
+    "baseurl=${SCL_ROOT}/sclo/\$basearch/sclo/" \
     'enabled=1' \
     'gpgcheck=0' \
     '' \
     '[centos-sclo-rh]' \
     'name=CentOS-7 - SCLo rh' \
-    'baseurl=http://vault.centos.org/centos/7/sclo/$basearch/rh/' \
+    "baseurl=${SCL_ROOT}/sclo/\$basearch/rh/" \
     'enabled=1' \
     'gpgcheck=0' \
     > /etc/yum.repos.d/CentOS-SCLo.repo && \
