@@ -47,7 +47,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends ca-certificates && \
-    apt-get purge -y --allow-remove-essential \
+    dpkg --purge --force-all \
         apt \
         dpkg \
         gpgv \
