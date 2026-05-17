@@ -43,7 +43,7 @@ RUN bash /tmp/nginx-builder.sh && \
     cp /etc/group /runtime-root/etc/group && \
     cp /etc/nsswitch.conf /runtime-root/etc/nsswitch.conf && \
     cp -a /etc/ssl/certs /runtime-root/etc/ssl/certs && \
-    ldd /usr/local/nginx/sbin/nginx | awk '/=> \// { print $3 } /^\// { print $1 }' | sort -u | \
+    ldd /usr/local/nginx/sbin/nginx | awk '/=> \// { print $3 } /ld-linux/ { print $1 }' | sort -u | \
       while read -r lib; do \
         mkdir -p "/runtime-root$(dirname "$lib")"; \
         cp -L "$lib" "/runtime-root$lib"; \
