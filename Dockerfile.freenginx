@@ -11,6 +11,7 @@ ENV OPENSSL_RAW_TAG=${OPENSSL_RAW_TAG}
 
 # Install build dependencies
 RUN apt-get update && \
+    apt-get dist-upgrade -y && \
     apt-get install -y \
     build-essential \
     gcc \
@@ -35,38 +36,31 @@ COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
     rm -rf /usr/local/src/* /tmp/nginx-builder.sh && \
     ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
-    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
+    ln -sf /dev/stderr /usr/local/nginx/logs/error.log && \
+    mkdir -p /runtime-root/usr/local /runtime-root/etc/ssl /runtime-root/tmp && \
+    cp -a /usr/local/nginx /runtime-root/usr/local/nginx && \
+    cp /etc/passwd /runtime-root/etc/passwd && \
+    cp /etc/group /runtime-root/etc/group && \
+    cp /etc/nsswitch.conf /runtime-root/etc/nsswitch.conf && \
+    cp -a /etc/ssl/certs /runtime-root/etc/ssl/certs && \
+    ldd /usr/local/nginx/sbin/nginx | awk '/=> \// { print $3 } /^\// { print $1 }' | sort -u | \
+      while read -r lib; do \
+        mkdir -p "/runtime-root$(dirname "$lib")"; \
+        cp -L "$lib" "/runtime-root$lib"; \
+      done && \
+    find /lib /usr/lib -name 'libnss_dns.so.2' -o -name 'libnss_files.so.2' -o -name 'libresolv.so.2' | \
+      while read -r lib; do \
+        mkdir -p "/runtime-root$(dirname "$lib")"; \
+        cp -L "$lib" "/runtime-root$lib"; \
+      done
 
 # Runtime stage
-FROM ubuntu:24.04
+FROM scratch
 
 LABEL maintainer="weida <caoweida2004@gmail.com>"
-LABEL description="freenginx with HTTP/3 (QUIC) support - Ubuntu 24.04 runtime"
+LABEL description="freenginx with HTTP/3 (QUIC) support - minimal scratch runtime"
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && \
-    apt-get dist-upgrade -y && \
-    apt-get install -y --no-install-recommends ca-certificates && \
-    rm -f /var/lib/dpkg/info/tar.prerm /var/lib/dpkg/info/tar.postinst && \
-    dpkg --purge --force-all tar && \
-    dpkg --purge --force-all \
-        sed \
-        util-linux \
-        login \
-        passwd \
-        libcap2 \
-        libgcrypt20 \
-        gpgv \
-        apt \
-        dpkg && \
-    rm -rf /var/lib/apt/lists/*
-
-# Copy nginx from builder
-COPY --from=builder /usr/local/nginx /usr/local/nginx
-
-# Copy user info from builder
-COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/group /etc/group
+COPY --from=builder /runtime-root /
 
 EXPOSE 80 443 443/udp
 

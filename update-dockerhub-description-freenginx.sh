@@ -42,16 +42,16 @@ docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/freenginx-http3:la
 - ✅ Post-Quantum Cryptography via OpenSSL 4.0+
 - ✅ Encrypted Client Hello (ECH) capable build and example
 - ✅ Multi-architecture (amd64, arm64)
-- ✅ Runtime-pruned standard image to reduce unused OS packages
+- ✅ Minimal scratch runtime to avoid unused OS packages
 - ✅ Daily upstream checks
 
 ## Version Selection
 
 ### Standard Version (latest)
-- Runtime: Ubuntu 24.04, upgraded and runtime-pruned
-- glibc: 2.39
+- Runtime: scratch/minimal
+- glibc: copied from the updated Ubuntu 24.04 builder
 - Best for: Modern systems (Ubuntu 22.04+, Debian 12+, RHEL 9+)
-- Package manager and unused tools such as apt, dpkg, tar, and sed are removed
+- Package manager and unused tools such as apt, dpkg, tar, and sed are not present
 
 ### Compatible Version (latest-compat)
 - Base: CentOS 7 build + AlmaLinux 8 minimal runtime
@@ -61,9 +61,9 @@ docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/freenginx-http3:la
 ## Runtime Package Policy
 
 These are freenginx runtime images, not full Linux distribution images. Standard
-images upgrade Ubuntu packages during build, keep the runtime files needed by
-freenginx, then remove package-management and archive utilities that freenginx
-does not need at runtime.
+images build freenginx on updated Ubuntu 24.04, then copy only freenginx,
+required shared libraries, CA certificates, and passwd/group data into a scratch
+runtime. Package-management and archive utilities are not included.
 
 ## Links
 - GitHub: https://github.com/weida/nginx-mainline-test-builds
