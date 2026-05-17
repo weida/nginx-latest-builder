@@ -48,16 +48,16 @@ RUN apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends ca-certificates && \
     dpkg --purge --force-all \
-        apt \
-        dpkg \
-        gpgv \
-        libcap2 \
-        libgcrypt20 \
+        tar \
+        sed \
+        util-linux \
         login \
         passwd \
-        sed \
-        tar \
-        util-linux && \
+        libcap2 \
+        libgcrypt20 \
+        gpgv \
+        apt \
+        dpkg && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy nginx from builder
