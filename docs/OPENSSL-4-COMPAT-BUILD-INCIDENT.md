@@ -193,7 +193,30 @@ Important runs during the incident:
   the SCL repository root used `centos/7` instead of `altarch/7`.
 - `25975404562`: SCL arch path fixed; standard succeeded, compat continued long
   build verification.
-- `25975811397`: current OpenSSL 4.0 verification run after trimming OpenSSL
-  build scope.
+- `25975811397`: OpenSSL build scope was trimmed; this run later completed
+  successfully, but was superseded by the final commit below.
+- `25976713332`: final nginx OpenSSL 4.0 verification run for commit `7eba8ec`.
+  Standard and compat both completed successfully. Standard ran from
+  `2026-05-17T00:18:40Z` to `2026-05-17T00:19:28Z`; compat ran from
+  `2026-05-17T00:18:40Z` to `2026-05-17T00:58:05Z`. In both jobs,
+  `Build and push` and `Smoke test image` were `success`.
+  URL: https://github.com/weida/nginx-mainline-test-builds/actions/runs/25976713332
+- `25976713317`: final freenginx OpenSSL 4.0 verification run for commit
+  `7eba8ec`. Standard and compat both completed successfully. Standard ran from
+  `2026-05-17T00:18:33Z` to `2026-05-17T00:19:22Z`; compat ran from
+  `2026-05-17T00:18:33Z` to `2026-05-17T01:01:44Z`. In both jobs,
+  `Build and push` and `Smoke test image` were `success`.
+  URL: https://github.com/weida/nginx-mainline-test-builds/actions/runs/25976713317
 
-Update this section with the final successful run URL after CI completes.
+## Final Status
+
+OpenSSL 4.0 support is verified for:
+
+- nginx standard image
+- nginx compat image
+- freenginx standard image
+- freenginx compat image
+
+The compat track still takes much longer than standard because it builds CentOS
+7/glibc 2.17 compatible images for both `linux/amd64` and `linux/arm64`; the
+arm64 side runs under buildx/QEMU and compiles nginx plus OpenSSL from source.
