@@ -157,11 +157,16 @@ The nginx configure command passes:
 --with-openssl-opt="enable-tls1_3 ${OPENSSL_BUILD_OPTS} ${OPENSSL_EXTRA_OPTS}"
 ```
 
-Compat still adds:
+Compat adds:
 
 ```sh
-OPENSSL_EXTRA_OPTS="-std=c99 no-asm -D_GNU_SOURCE"
+OPENSSL_EXTRA_OPTS="-D_GNU_SOURCE"
 ```
+
+Earlier compat builds used `-std=c99 no-asm -D_GNU_SOURCE` to work around the
+old CentOS 7 GCC 4.8 compiler. After moving compat builds to devtoolset-9, the
+`-std=c99` and `no-asm` workarounds are no longer needed. Keeping `no-asm` made
+OpenSSL 4.0 multi-architecture builds much slower, especially under buildx/QEMU.
 
 ## Verification Checklist
 
