@@ -8,6 +8,7 @@ Testing-oriented usage guide for the mainline Docker images published by this re
 - They are meant for testing, evaluation, and early validation
 - Older GitHub releases are not kept forever
 - For anything repeatable, pin an explicit version tag instead of `latest`
+- Current builds use OpenSSL 4.0 by default
 
 ## 🚀 Quick Start (Choose One)
 
@@ -193,7 +194,8 @@ See `examples/` folder for:
 
 - HTTP/2 and HTTP/3 (QUIC)
 - TLS 1.3
-- **Post-Quantum Cryptography** (ML-KEM via OpenSSL 3.6+)
+- OpenSSL 4.0
+- **Post-Quantum Cryptography** (ML-KEM via OpenSSL 4.0+)
 - Latest OpenSSL, PCRE2, and zlib
 - Multi-architecture (amd64, arm64)
 - Multiple glibc versions for compatibility
@@ -218,7 +220,21 @@ See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration
 **Compatible (`latest-compat`):**
 - Base: CentOS 7 build + AlmaLinux 8 minimal runtime
 - glibc: 2.17+
+- Compiler: devtoolset-9 for OpenSSL 4.0 compatibility
 - For: CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 20.04, Debian 11
+
+## Build Performance
+
+Runtime usage is the same Docker experience, but CI build times differ:
+
+- Standard images build quickly on Ubuntu 24.04.
+- Compat images build on CentOS 7 with glibc 2.17 compatibility and compile
+  OpenSSL 4.0 from source.
+- Compat `linux/arm64` builds run through buildx/QEMU, so the compat CI job can
+  take around 40 minutes.
+
+This is expected build-time overhead and does not by itself indicate worse nginx
+runtime serving performance.
 
 **Not sure which to use?** Try standard first. If you get glibc errors, use compat.
 

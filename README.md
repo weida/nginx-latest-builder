@@ -24,7 +24,8 @@ It is primarily a **test / tracking / early-adoption** build project. The Docker
 - ✅ **HTTP/2** support
 - ✅ **HTTP/3 (QUIC)** support
 - ✅ **TLS 1.3** with modern cipher suites
-- ✅ **Post-Quantum Cryptography** (ML-KEM, ML-DSA via OpenSSL 3.6+)
+- ✅ **OpenSSL 4.0** support
+- ✅ **Post-Quantum Cryptography** (ML-KEM, ML-DSA via OpenSSL 4.0+)
 - ✅ Automatically fetches the latest mainline versions from GitHub for:
   - PCRE2
   - zlib
@@ -32,7 +33,34 @@ It is primarily a **test / tracking / early-adoption** build project. The Docker
   - liboqs (Open Quantum Safe)
   - Nginx
 - ✅ Multi-architecture Docker images (x86_64, ARM64)
+- ✅ Standard and compatibility image tracks
 - ✅ Automated CI/CD builds and releases
+
+## Image Tracks
+
+This project publishes two runtime tracks for both nginx and freenginx:
+
+| Track | Tags | Runtime | Builder | Target |
+| --- | --- | --- | --- | --- |
+| Standard | `latest`, `<version>` | Ubuntu 24.04 | Ubuntu 24.04 | Modern distributions with recent glibc |
+| Compat | `latest-compat`, `<version>-compat` | AlmaLinux 8 minimal | CentOS 7 + devtoolset-9 | Older glibc targets, including CentOS 7 era systems |
+
+The compat track is still built against a CentOS 7 / glibc 2.17 environment for
+runtime compatibility, but it uses `devtoolset-9` so OpenSSL 4.0 and current
+nginx sources can be compiled with a modern enough GCC.
+
+### Build Performance Notes
+
+The compat track is expected to build much slower than the standard track:
+
+- It compiles nginx, OpenSSL, PCRE2, and zlib from source.
+- It builds both `linux/amd64` and `linux/arm64`.
+- The arm64 compat build runs under Docker buildx/QEMU in GitHub Actions.
+- Final OpenSSL 4.0 validation took about 39 minutes for nginx compat and about
+  43 minutes for freenginx compat.
+
+This is build-time cost only. It does not mean the resulting runtime image is
+expected to be slower for normal nginx serving workloads.
 
 ## Release Retention Policy
 
@@ -142,7 +170,7 @@ After the script completes, you’ll see the Nginx version and linked library de
 === Checking Nginx version ===
 nginx version: nginx/1.27.3
 built by gcc 10.2.1 20200825 (Alibaba 10.2.1-3.8 2.32) (GCC)
-built with OpenSSL 3.4.0 22 Oct 2024
+built with OpenSSL 4.0.0
 TLS SNI support enabled
 configure arguments: --prefix=/usr/local/nginx --user=nginx --group=nginx ...
 ```
@@ -151,8 +179,8 @@ configure arguments: --prefix=/usr/local/nginx --user=nginx --group=nginx ...
 === Done. Nginx installed to /usr/local/nginx ===
     PCRE2:   10.44
     zlib:    1.3.1
-    OpenSSL: 3.4.0
-    Nginx:   1.27.3
+    OpenSSL: 4.0.0
+    Nginx:   1.31.0
 ```
 
 ---
@@ -165,8 +193,8 @@ The script detects and uses the latest tags for:
 
 - **PCRE2**: Latest version (e.g., `10.44`)
 - **zlib**: Latest version (e.g., `1.3.1`)
-- **OpenSSL**: Latest version (e.g., `3.4.0`)
-- **Nginx**: Latest version (e.g., `1.27.3`)
+- **OpenSSL**: Latest version, currently OpenSSL 4.0 by default
+- **Nginx**: Latest mainline `release-*` tag
 
 ### Static Compilation
 
@@ -174,7 +202,8 @@ All libraries are statically linked with Nginx, ensuring a self-contained binary
 
 ### TLS 1.3 Support
 
-OpenSSL is compiled with the `enable-tls1_3` option to provide full TLS 1.3 support.
+OpenSSL is compiled with `enable-tls1_3` and a reduced build scope for nginx usage:
+`no-tests no-docs no-apps`.
 
 ---
 
@@ -192,7 +221,7 @@ The script configures Nginx with the following default options:
 --with-pcre=/path/to/pcre2 \
 --with-zlib=/path/to/zlib \
 --with-openssl=/path/to/openssl \
---with-openssl-opt="enable-tls1_3" \
+--with-openssl-opt="enable-tls1_3 no-tests no-docs no-apps ..." \
 --with-cc-opt="-O2" \
 --with-ld-opt="-Wl,-rpath,/usr/local/lib"
 ```
@@ -205,7 +234,7 @@ You can modify these options in the script to add or remove features according t
 
 ## Post-Quantum Cryptography Support
 
-This build includes OpenSSL 3.6+ with built-in support for NIST-standardized post-quantum algorithms:
+This build includes OpenSSL 4.0+ with built-in support for NIST-standardized post-quantum algorithms:
 
 - **ML-KEM** (FIPS 203) - Quantum-resistant key exchange
 - **ML-DSA** (FIPS 204) - Quantum-resistant digital signatures
