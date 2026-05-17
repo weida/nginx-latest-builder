@@ -36,7 +36,9 @@ COPY nginx-builder.sh /tmp/nginx-builder.sh
 RUN bash /tmp/nginx-builder.sh && \
     rm -rf /usr/local/src/* /tmp/nginx-builder.sh && \
     ln -sf /dev/stdout /usr/local/nginx/logs/access.log && \
-    ln -sf /dev/stderr /usr/local/nginx/logs/error.log && \
+    ln -sf /dev/stderr /usr/local/nginx/logs/error.log
+
+RUN \
     mkdir -p /runtime-root/usr/local /runtime-root/etc/ssl /runtime-root/tmp && \
     cp -a /usr/local/nginx /runtime-root/usr/local/nginx && \
     cp /etc/passwd /runtime-root/etc/passwd && \
