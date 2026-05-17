@@ -25,6 +25,7 @@ It is primarily a **test / tracking / early-adoption** build project. The Docker
 - ✅ **HTTP/3 (QUIC)** support
 - ✅ **TLS 1.3** with modern cipher suites
 - ✅ **OpenSSL 4.0** support
+- ✅ **Encrypted Client Hello (ECH)** support when using OpenSSL 4.0+ / ECH-capable builds
 - ✅ **Post-Quantum Cryptography** (ML-KEM, ML-DSA via OpenSSL 4.0+)
 - ✅ Automatically fetches the latest mainline versions from GitHub for:
   - PCRE2
@@ -247,6 +248,22 @@ See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration
 ssl_protocols TLSv1.3;
 ssl_ecdh_curve X25519MLKEM768:X25519:prime256v1;
 ```
+
+## Encrypted Client Hello Example
+
+The repository includes a runnable shared-mode ECH example under
+[`examples/ech`](examples/ech). It generates an ECH PEM file with
+`openssl ech`, starts the Docker image with `ssl_ech_file`, then verifies the
+connection with `openssl s_client -ech_config_list` and NGINX access-log
+evidence.
+
+```bash
+cd examples/ech
+OPENSSL_BIN=/path/to/openssl-4 ./test-ech.sh
+```
+
+The ECH test requires Docker Compose and an OpenSSL 4.0+ CLI that includes the
+`ech` command.
 
 ---
 

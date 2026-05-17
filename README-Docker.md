@@ -62,6 +62,14 @@ cd examples/https
 docker-compose up -d
 ```
 
+### 3. ECH Shared-Mode Server (`examples/ech/`)
+Encrypted Client Hello with `ssl_ech_file` and log-based verification. Requires
+Docker Compose and an OpenSSL 4.0+ CLI with `openssl ech`.
+```bash
+cd examples/ech
+OPENSSL_BIN=/path/to/openssl-4 ./test-ech.sh
+```
+
 ## 📖 Complete Beginner Tutorial
 
 ### Step 1: Install Docker
@@ -180,6 +188,7 @@ docker logs <container-name>
 
 See `examples/` folder for:
 - HTTPS setup
+- ECH setup and verification
 - Reverse proxy
 - Load balancing
 - Custom configuration
@@ -195,6 +204,7 @@ See `examples/` folder for:
 - HTTP/2 and HTTP/3 (QUIC)
 - TLS 1.3
 - OpenSSL 4.0
+- Encrypted Client Hello (ECH) example and verification script
 - **Post-Quantum Cryptography** (ML-KEM via OpenSSL 4.0+)
 - Latest OpenSSL, PCRE2, and zlib
 - Multi-architecture (amd64, arm64)
