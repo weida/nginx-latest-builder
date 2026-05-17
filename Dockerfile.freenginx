@@ -45,6 +45,7 @@ LABEL description="freenginx with HTTP/3 (QUIC) support - Ubuntu 24.04 runtime"
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
+    apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
