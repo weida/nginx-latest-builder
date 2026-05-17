@@ -43,8 +43,13 @@ This project publishes two runtime tracks for both nginx and freenginx:
 
 | Track | Tags | Runtime | Builder | Target |
 | --- | --- | --- | --- | --- |
-| Standard | `latest`, `<version>` | Ubuntu 24.04 | Ubuntu 24.04 | Modern distributions with recent glibc |
+| Standard | `latest`, `<version>` | Ubuntu 24.04, upgraded and runtime-pruned | Ubuntu 24.04 | Modern distributions with recent glibc |
 | Compat | `latest-compat`, `<version>-compat` | AlmaLinux 8 minimal | CentOS 7 + devtoolset-9 | Older glibc targets, including CentOS 7 era systems |
+
+The standard runtime is not a general-purpose Ubuntu shell image. During image
+build it upgrades Ubuntu packages, installs runtime CA certificates, then removes
+unused package-management and archive utilities such as `apt`, `dpkg`, `tar`,
+and `sed` to reduce scan noise and runtime attack surface.
 
 The compat track is still built against a CentOS 7 / glibc 2.17 environment for
 runtime compatibility, but it uses `devtoolset-9` so OpenSSL 4.0 and current

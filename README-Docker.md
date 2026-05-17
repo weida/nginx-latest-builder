@@ -9,6 +9,8 @@ Testing-oriented usage guide for the mainline Docker images published by this re
 - Older GitHub releases are not kept forever
 - For anything repeatable, pin an explicit version tag instead of `latest`
 - Current builds use OpenSSL 4.0 by default
+- Standard images are runtime-pruned after package upgrades; `apt`, `dpkg`,
+  `tar`, `sed`, and other unused OS utilities are removed from the final image
 
 ## 🚀 Quick Start (Choose One)
 
@@ -225,6 +227,8 @@ See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration
 **Standard (`latest`):**
 - Base: Ubuntu 24.04
 - glibc: 2.39
+- Runtime packages are upgraded during build
+- Package-management and archive tools are removed from the final runtime image
 - For: Ubuntu 22.04+, Debian 12+, RHEL 9+
 
 **Compatible (`latest-compat`):**
@@ -232,6 +236,27 @@ See [docs/POST-QUANTUM-CRYPTO.md](docs/POST-QUANTUM-CRYPTO.md) for configuration
 - glibc: 2.17+
 - Compiler: devtoolset-9 for OpenSSL 4.0 compatibility
 - For: CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 20.04, Debian 11
+
+## Runtime Package Policy
+
+The Docker images are intended to run nginx, not to act as full Linux
+distributions.
+
+Standard images:
+- Upgrade Ubuntu runtime packages during build.
+- Keep nginx, glibc, CA certificates, OpenSSL runtime support, passwd/group data,
+  and files needed to serve traffic.
+- Remove unused runtime packages that commonly create scanner findings but are
+  not needed by nginx, including `apt`, `dpkg`, `tar`, `sed`, `libcap2`,
+  `libgcrypt20`, `login`, `passwd`, and `util-linux`.
+
+Compat images:
+- Use AlmaLinux 8 minimal runtime for older glibc compatibility.
+- Run `microdnf update -y` during build.
+- Keep the RPM runtime layout for compatibility with the CentOS 7 build target.
+
+If you need extra OS packages, build a derived image from the source Dockerfile
+or add the packages in your own runtime stage before pruning.
 
 ## Build Performance
 

@@ -15,12 +15,13 @@ if [ -z "$DOCKERHUB_TOKEN" ]; then
 fi
 
 # Short description (100 characters max)
-SHORT_DESC="Nginx with HTTP/3, TLS 1.3, latest OpenSSL. Multi-arch (amd64/arm64). Checked daily."
+SHORT_DESC="Nginx with HTTP/3, TLS 1.3, OpenSSL 4.0, PQC/ECH. Multi-arch. Checked daily."
 
 # Full description
 FULL_DESC="# Nginx with HTTP/3
 
-High-performance Nginx with HTTP/3 (QUIC), TLS 1.3, and latest dependencies.
+Testing-oriented mainline Nginx image with HTTP/3 (QUIC), TLS 1.3, OpenSSL 4.0,
+post-quantum crypto support, and ECH-capable builds.
 
 ## Quick Start
 
@@ -29,7 +30,7 @@ High-performance Nginx with HTTP/3 (QUIC), TLS 1.3, and latest dependencies.
 docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest
 \`\`\`
 
-**Compatible version** (CentOS 7, Alibaba Cloud Linux 3, Ubuntu 18.04+):
+**Compatible version** (CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 20.04, Debian 11):
 \`\`\`bash
 docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest-compat
 \`\`\`
@@ -37,23 +38,32 @@ docker run -d -p 80:80 -p 443:443 -p 443:443/udp caoweida2004/nginx-http3:latest
 ## Features
 - ✅ HTTP/2 and HTTP/3 (QUIC)
 - ✅ TLS 1.3 with modern cipher suites
-- ✅ Latest OpenSSL 3.4+, PCRE2, zlib
+- ✅ OpenSSL 4.0, PCRE2, zlib
+- ✅ Post-Quantum Cryptography via OpenSSL 4.0+
+- ✅ Encrypted Client Hello (ECH) capable build and example
 - ✅ Multi-architecture (amd64, arm64)
-- ✅ Statically linked for minimal dependencies
+- ✅ Runtime-pruned standard image to reduce unused OS packages
 - ✅ Daily upstream checks
 
 ## Version Selection
 
 ### Standard Version (latest)
-- Base: Distroless Debian 12
-- glibc: 2.39+
+- Runtime: Ubuntu 24.04, upgraded and runtime-pruned
+- glibc: 2.39
 - Best for: Modern systems (Ubuntu 22.04+, Debian 12+, RHEL 9+)
-- Minimal CVE vulnerabilities
+- Package manager and unused tools such as apt, dpkg, tar, and sed are removed
 
 ### Compatible Version (latest-compat)
 - Base: CentOS 7 build + AlmaLinux 8 minimal runtime
 - glibc: 2.17+
-- Best for: Older systems (CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 18.04+)
+- Best for: Older systems (CentOS 7, Alibaba Cloud Linux 2/3, Ubuntu 20.04, Debian 11)
+
+## Runtime Package Policy
+
+These are nginx runtime images, not full Linux distribution images. Standard
+images upgrade Ubuntu packages during build, keep the runtime files needed by
+nginx, then remove package-management and archive utilities that nginx does not
+need at runtime.
 
 ## Links
 - GitHub: https://github.com/weida/nginx-mainline-test-builds

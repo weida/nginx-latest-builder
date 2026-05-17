@@ -47,6 +47,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get dist-upgrade -y && \
     apt-get install -y --no-install-recommends ca-certificates && \
+    apt-get purge -y --allow-remove-essential \
+        apt \
+        dpkg \
+        gpgv \
+        libcap2 \
+        libgcrypt20 \
+        login \
+        passwd \
+        sed \
+        tar \
+        util-linux && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy nginx from builder
